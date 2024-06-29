@@ -1,2 +1,5 @@
 <h1>Home</h1>
 <p>This is a chat app</p>
+{% if user.is_authenticated %}
+    <p>Hello {{ user.username }}</p>
+{% endif %}
