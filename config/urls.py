@@ -32,7 +32,7 @@ urlpatterns = [
     path('password-set/', allauth_views.PasswordSetView.as_view(), name='account_set_password'),
     path('password-reset/', allauth_views.PasswordResetView.as_view(), name='account_reset_password'),
     path('password-reset/done/', allauth_views.PasswordResetDoneView.as_view(), name='account_reset_password_done'),
-    re_path(r'^password-reset/confirm/(?P<uidb36>[0-9A-Za-z]+)-(?P<key>.+)/$', allauth_views.PasswordResetFromKeyView.as_view(), name="account_reset_password_from_key"),
+    re_path(r'^password-reset/confirm/(?P<uidb36>[0-9A-Za-z]+)-(?P<key>.+)/$', allauth_views.PasswordResetFromKeyView.as_view(), name='account_reset_password_from_key'),
     path('password-reset/complete/', allauth_views.PasswordResetFromKeyDoneView.as_view(), name='account_reset_password_from_key_done'),
     path('', include('chat.urls')),
 ]

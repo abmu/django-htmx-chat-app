@@ -7,7 +7,7 @@ class MyUserAdmin(UserAdmin):
     model = User
 
     fieldsets = UserAdmin.fieldsets + (
-        ('Field name', {'fields': ()}),
+        ('{Section name}', {'fields': ()}),
     )
 
 admin.site.register(User, MyUserAdmin)
