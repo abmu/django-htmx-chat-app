@@ -1,5 +1,6 @@
-<h1>Home</h1>
-<p>This is a chat app</p>
-{% if user.is_authenticated %}
+{% extends 'chat/base.html' %}
+{% block content %}
+    <h1>Home</h1>
+    <p>This is a chat app</p>
     <p>Hello {{ user.username }}</p>
-{% endif %}
+{% endblock content %}
