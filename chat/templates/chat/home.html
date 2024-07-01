@@ -2,5 +2,9 @@
 {% block content %}
     <h1>Home</h1>
     <p>This is a chat app</p>
-    <p>Hello {{ user.username }}</p>
+    <form method="POST" action="{% url 'chat_home' %}">
+        {% csrf_token %}
+        {{ form }}
+        <button type="submit">Send</button>
+    </form>
 {% endblock content %}
