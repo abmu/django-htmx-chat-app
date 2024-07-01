@@ -18,3 +18,6 @@ class Message(models.Model):
     )
     content = models.TextField()
     timestamp = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.content

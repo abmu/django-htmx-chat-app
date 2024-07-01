@@ -7,4 +7,12 @@
         {{ form }}
         <button type="submit">Send</button>
     </form>
+    {% for message in sent_messages %}
+        <ul>
+            <li>{{ message.sender }}</li>
+            <li>{{ message.recipient }}</li>
+            <li>{{ message.content }}</li>
+            <li>{{ message.timestamp }}</li>
+        </ul>
+    {% endfor %}
 {% endblock content %}
