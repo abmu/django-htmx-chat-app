@@ -1,8 +1,12 @@
 {% extends 'chat/base.html' %}
 {% block content %}
-    <h1>Home</h1>
-    <p>This is a chat app</p>
-    {% for message in received_messages %}
+    <h1>{{ recipient }}</h1>
+    <form method="POST" action="{% url 'chat_direct_message' recipient.username %}">
+        {% csrf_token %}
+        {{ form }}
+        <button type="submit">Send</button>
+    </form>
+    {% for message in sent_messages %}
         <ul>
             <li>{{ message.sender }}</li>
             <li>{{ message.recipient }}</li>
@@ -10,4 +14,5 @@
             <li>{{ message.timestamp }}</li>
         </ul>
     {% endfor %}
+    {{ message.content }}
 {% endblock content %}
