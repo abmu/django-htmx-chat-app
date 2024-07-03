@@ -1,11 +1,11 @@
 {% extends 'chat/base.html' %}
 {% block content %}
     <h1>Home</h1>
-    <p>This is a chat app</p>
+    <p>Hello {{ user }}</p>
     {% for message in received_messages %}
         <ul>
-            <li>{{ message.sender }}</li>
-            <li>{{ message.recipient }}</li>
+            <li>From: {{ message.sender }}</li>
+            <li>To: {{ message.recipient }}</li>
             <li>{{ message.content }}</li>
             <li>{{ message.timestamp }}</li>
         </ul>

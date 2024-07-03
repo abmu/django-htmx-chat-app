@@ -8,8 +8,8 @@
     </form>
     {% for message in sent_messages %}
         <ul>
-            <li>{{ message.sender }}</li>
-            <li>{{ message.recipient }}</li>
+            <li>From: {{ message.sender }}</li>
+            <li>To: {{ message.recipient }}</li>
             <li>{{ message.content }}</li>
             <li>{{ message.timestamp }}</li>
         </ul>
