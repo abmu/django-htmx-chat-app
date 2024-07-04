@@ -9,11 +9,16 @@ User = get_user_model()
 
 @login_required(redirect_field_name=None)
 def home(request):
-    received_messages = Message.objects.filter(recipient=request.user)
+    user = request.user
+    friends = user.friends.filter(friends=user)
+    outgoing_requests = user.friends.exclude(pk__in=friends)
+    incoming_requests = User.objects.filter(friends=user).exclude(pk__in=friends)
 
     return render(request, 'chat/home.html', {
         'title': 'Home',
-        'received_messages': received_messages
+        'outgoing_requests': outgoing_requests,
+        'incoming_requests': incoming_requests,
+        'friends': friends
     })
 
 
@@ -33,6 +38,7 @@ def direct_message(request, username):
         form = MessageForm()
 
     sent_messages = Message.objects.filter(sender=sender, recipient=recipient)
+    print(sent_messages.last().content)
     
     return render(request, 'chat/direct_message.html', {
         'title': 'Direct message',

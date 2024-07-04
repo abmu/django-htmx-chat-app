@@ -10,7 +10,7 @@
         <ul>
             <li>From: {{ message.sender }}</li>
             <li>To: {{ message.recipient }}</li>
-            <li>{{ message.content }}</li>
+            <li style="white-space: pre-wrap;">{{ message.content }}</li>
             <li>{{ message.timestamp }}</li>
         </ul>
     {% endfor %}

@@ -2,12 +2,22 @@
 {% block content %}
     <h1>Home</h1>
     <p>Hello {{ user }}</p>
-    {% for message in received_messages %}
-        <ul>
-            <li>From: {{ message.sender }}</li>
-            <li>To: {{ message.recipient }}</li>
-            <li>{{ message.content }}</li>
-            <li>{{ message.timestamp }}</li>
-        </ul>
-    {% endfor %}
+    Incoming requests
+    <ul>
+        {% for request in incoming_requests %}
+            <li>{{ request.username }}</li>
+        {% endfor %}
+    </ul>
+    Outgoing requests
+    <ul>
+        {% for request in outgoing_requests %}
+            <li>{{ request.username }}</li>
+        {% endfor %}
+    </ul>
+    Friends
+    <ul>
+        {% for friend in friends %}
+            <li>{{ friend.username }}</li>
+        {% endfor %}
+    </ul>          
 {% endblock content %}

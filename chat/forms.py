@@ -17,7 +17,7 @@ class AddForm(forms.Form):
     def clean_friend_username(self):
         username = self.cleaned_data['friend_username']
         try:
-            self.friend = User.objects.get(username=username)
+            self.friend = User.objects.get(username__iexact=username) # __iexact => case insensitive match
         except User.DoesNotExist:
             raise forms.ValidationError('User with this username does not exist')
         return username
