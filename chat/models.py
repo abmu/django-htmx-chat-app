@@ -21,3 +21,11 @@ class Message(models.Model):
 
     def __str__(self):
         return self.content
+    
+    @classmethod
+    def get_messages(cls, user1, user2):
+        '''Returns all of the messages sent directly between two users'''
+        return cls.objects.filter(
+            models.Q(sender=user1, recipient=user2) |
+            models.Q(sender=user2, recipient=user1)
+        ).order_by('timestamp')

@@ -6,7 +6,7 @@
         {{ form }}
         <button type="submit">Send</button>
     </form>
-    {% for message in sent_messages %}
+    {% for message in all_messages %}
         <ul>
             <li>From: {{ message.sender }}</li>
             <li>To: {{ message.recipient }}</li>
@@ -14,5 +14,4 @@
             <li>{{ message.timestamp }}</li>
         </ul>
     {% endfor %}
-    {{ message.content }}
 {% endblock content %}
