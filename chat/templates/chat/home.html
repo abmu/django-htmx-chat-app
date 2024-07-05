@@ -4,14 +4,27 @@
     <p>Hello {{ user }}</p>
     Incoming requests
     <ul>
-        {% for request in incoming_requests %}
-            <li>{{ request.username }}</li>
+        {% for sender in incoming_requests %}
+            <li>
+                {{ sender.username }}
+                <form method="POST" action="{% url 'chat_handle_incoming_request' sender.id %}">
+                    {% csrf_token %}
+                    <button type="submit" name="accept">Accept</button>
+                    <button type="submit" name="reject">Reject</button>
+                </form>
+            </li>
         {% endfor %}
     </ul>
     Outgoing requests
     <ul>
-        {% for request in outgoing_requests %}
-            <li>{{ request.username }}</li>
+        {% for recipient in outgoing_requests %}
+            <li>
+                {{ recipient.username }}
+                <form method="POST" action="{% url 'chat_handle_outgoing_request' recipient.id %}">
+                    {% csrf_token %}
+                    <button type="submit" name="cancel">Cancel</button>
+                </form>
+            </li>
         {% endfor %}
     </ul>
     Friends

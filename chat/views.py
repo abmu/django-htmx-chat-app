@@ -26,14 +26,14 @@ def home(request):
 
 @login_required(redirect_field_name=None)
 @require_POST
-def handle_incoming_request(request, user_id, action):
+def handle_incoming_request(request, user_id):
     user = request.user
     request_sender = get_object_or_404(User, id=user_id)
 
     if request_sender in user.get_incoming_requests():
-        if action == 'acceot':
+        if 'accept' in request.POST:
             user.friends.add(request_sender)
-        elif action == 'reject':
+        elif 'reject' in request.POST:
             request_sender.friends.remove(user)
         else:
             messages.error(request, 'Invalid action')
@@ -41,6 +41,27 @@ def handle_incoming_request(request, user_id, action):
         messages.error(request, 'No such friend request')
 
     return redirect('chat_home')
+
+
+@login_required(redirect_field_name=None)
+@require_POST
+def handle_outgoing_request(request, user_id):
+    user = request.user
+    request_recipient = get_object_or_404(User, id=user_id)
+
+    if request_recipient in user.get_outgoing_requests():
+        if 'cancel' in request.POST:
+            user.friends.remove(request_recipient)
+        else:
+            messages.error(request, 'Invalid action')
+    else:
+        messages.error(request, 'No such friend request')
+
+    return redirect('chat_home')
+
+
+def remove_friend(request):
+    pass
 
 
 @login_required
