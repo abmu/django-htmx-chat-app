@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.views.decorators.http import require_POST
 from .forms import MessageForm, AddForm
 from .models import Message
 
@@ -20,6 +22,25 @@ def home(request):
         'outgoing_requests': outgoing_requests,
         'incoming_requests': incoming_requests
     })
+
+
+@login_required(redirect_field_name=None)
+@require_POST
+def handle_incoming_request(request, user_id, action):
+    user = request.user
+    request_sender = get_object_or_404(User, id=user_id)
+
+    if request_sender in user.get_incoming_requests():
+        if action == 'acceot':
+            user.friends.add(request_sender)
+        elif action == 'reject':
+            request_sender.friends.remove(user)
+        else:
+            messages.error(request, 'Invalid action')
+    else:
+        messages.error(request, 'No such friend request')
+
+    return redirect('chat_home')
 
 
 @login_required
