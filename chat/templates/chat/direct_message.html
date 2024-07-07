@@ -1,7 +1,7 @@
 {% extends 'chat/base.html' %}
 {% block content %}
     <h1>{{ recipient }}</h1>
-    <form method="POST" action="{% url 'chat_direct_message' recipient.username %}">
+    <form method="POST" action="{% url 'direct_message' recipient.username %}">
         {% csrf_token %}
         {{ form }}
         <button type="submit">Send</button>

@@ -1,7 +1,7 @@
 {% extends 'chat/base.html' %}
 {% block content %}
     <h1>Add</h1>
-    <form method="POST" action="{% url 'chat_add_user' %}">
+    <form method="POST" action="{% url 'add_user' %}">
         {% csrf_token %}
         {{ form }}
         <button type="submit">Send request</button>
