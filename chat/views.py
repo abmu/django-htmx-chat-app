@@ -100,7 +100,7 @@ def direct_message(request, username):
 @login_required
 def add_user(request):
     if request.method == 'POST':
-        form = AddForm(request.POST)
+        form = AddForm(request.POST, initial={'user': request.user})
         if form.is_valid():
             form.save(request.user)
             return redirect('chat_add_user')
