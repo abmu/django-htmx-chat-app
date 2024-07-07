@@ -1,0 +1,16 @@
+{% extends 'users/manage_friends.html' %}
+{% block subcontent %}
+    <h1>Incoming requests ({{ incoming_requests|length }})</h1>
+    <ul>
+        {% for sender in incoming_requests %}
+            <li>
+                {{ sender.username }}
+                <form method="POST" action="{% url 'handle_incoming_request' sender.id %}">
+                    {% csrf_token %}
+                    <button type="submit" name="accept">Accept</button>
+                    <button type="submit" name="reject">Reject</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock subcontent %}

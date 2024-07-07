@@ -1,18 +1,20 @@
 {% extends 'chat/base.html' %}
 {% block content %}
-    <h1>Manage friends</h1>
     <ul>
         <li>
-            <a href="{url 'all_friends'}">All friends</a>
+            <a href="{% url 'friends_list' %}">All friends</a>
         </li>
         <li>
-            <a href="{url 'incoming_requests'}">Incoming requests</a>
+            <a href="{% url 'incoming_requests' %}">Incoming requests</a>
         </li>
         <li>
-            <a href="{url 'outgoing_requests'}">Outgoing requests</a>
+            <a href="{% url 'outgoing_requests' %}">Outgoing requests</a>
         </li>
         <li>
-            <a href="{url 'add_user'}">Add user</a>
+            <a href="{% url 'add_friend' %}">Add friend</a>
         </li>
     </ul>
+    
+    {% block subcontent %}
+    {% endblock subcontent %}
 {% endblock content %}

@@ -9,16 +9,8 @@ User = get_user_model()
 
 @login_required(redirect_field_name=None)
 def home(request):
-    user = request.user
-    friends_mutual = user.friends_mutual
-    outgoing_requests = user.get_outgoing_requests()
-    incoming_requests = user.get_incoming_requests()
-    
     return render(request, 'chat/home.html', {
-        'title': 'Home',
-        'friends_mutual': friends_mutual,
-        'outgoing_requests': outgoing_requests,
-        'incoming_requests': incoming_requests
+        'title': 'Home'
     })
 
 

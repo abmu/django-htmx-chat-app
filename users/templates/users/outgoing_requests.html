@@ -1,0 +1,15 @@
+{% extends 'users/manage_friends.html' %}
+{% block subcontent %}
+    <h1>Outgoing requests ({{ outgoing_requests|length }})</h1>
+    <ul>
+        {% for recipient in outgoing_requests %}
+            <li>
+                {{ recipient.username }}
+                <form method="POST" action="{% url 'cancel_outgoing_request' recipient.id %}">
+                    {% csrf_token %}
+                    <button type="submit" name="cancel">Cancel</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>     
+{% endblock subcontent %}

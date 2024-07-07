@@ -3,10 +3,10 @@ from .models import User
 
 
 class AddForm(forms.Form):
-    friend_username = forms.CharField()
+    username = forms.CharField()
 
-    def clean_friend_username(self):
-        entered_username = self.cleaned_data['friend_username']
+    def clean_username(self):
+        entered_username = self.cleaned_data['username']
         user = self.initial.get('user')
 
         try:

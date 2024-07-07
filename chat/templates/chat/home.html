@@ -2,39 +2,4 @@
 {% block content %}
     <h1>Home</h1>
     <p>Signed in as: {{ user }}</p>
-    <p>Incoming requests</p>
-    <ul>
-        {% for sender in incoming_requests %}
-            <li>
-                {{ sender.username }}
-                <form method="POST" action="{% url 'handle_incoming_request' sender.id %}">
-                    {% csrf_token %}
-                    <button type="submit" name="accept">Accept</button>
-                    <button type="submit" name="reject">Reject</button>
-                </form>
-            </li>
-        {% endfor %}
-    </ul>
-    <p>Outgoing requests</p>
-    <ul>
-        {% for recipient in outgoing_requests %}
-            <li>
-                {{ recipient.username }}
-                <form method="POST" action="{% url 'handle_outgoing_request' recipient.id %}">
-                    {% csrf_token %}
-                    <button type="submit" name="cancel">Cancel</button>
-                </form>
-            </li>
-        {% endfor %}
-    </ul>
-    <p>Friends</p>
-    <ul>
-        {% for friend in friends_mutual %}
-            <li>{{ friend.username }}</li>
-            <form method="POST" action="{% url 'remove_friend' friend.id %}">
-                {% csrf_token %}
-                <button type="submit" name="remove">Remove</button>
-            </form>
-        {% endfor %}
-    </ul>          
 {% endblock content %}

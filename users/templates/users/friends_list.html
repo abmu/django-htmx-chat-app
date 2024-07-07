@@ -1,0 +1,13 @@
+{% extends 'users/manage_friends.html' %}
+{% block subcontent %}
+    <h1>All friends ({{ friends_mutual|length }})</h1>
+    <ul>
+        {% for friend in friends_mutual %}
+            <li>{{ friend.username }}</li>
+            <form method="POST" action="{% url 'remove_friend' friend.id %}">
+                {% csrf_token %}
+                <button type="submit" name="remove">Remove</button>
+            </form>
+        {% endfor %}
+    </ul>     
+{% endblock subcontent %}

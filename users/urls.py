@@ -17,8 +17,12 @@ urlpatterns = [
     path('password-reset/done/', allauth_views.PasswordResetDoneView.as_view(), name='account_reset_password_done'),
     re_path(r'^password-reset/confirm/(?P<uidb36>[0-9A-Za-z]+)-(?P<key>.+)/$', allauth_views.PasswordResetFromKeyView.as_view(), name='account_reset_password_from_key'),
     path('password-reset/complete/', allauth_views.PasswordResetFromKeyDoneView.as_view(), name='account_reset_password_from_key_done'),
-    path('friends/add/', views.add_user, name='add_user'),
-    path('friends/request/incoming/<int:user_id>/', views.handle_incoming_request, name='handle_incoming_request'),
-    path('friends/request/outgoing/<int:user_id>/', views.handle_outgoing_request, name='handle_outgoing_request'),
-    path('friends/remove/<int:user_id>/', views.remove_friend, name='remove_friend')
+    path('friends/', views.manage_friends, name='manage_friends'),
+    path('friends/all/', views.friends_list, name='friends_list'),
+    path('friends/remove/<int:user_id>/', views.remove_friend, name='remove_friend'),
+    path('friends/incoming/', views.incoming_requests, name='incoming_requests'),
+    path('friends/incoming/<int:user_id>/', views.handle_incoming_request, name='handle_incoming_request'),
+    path('friends/outgoing/', views.outgoing_requests, name='outgoing_requests'),
+    path('friends/outgoing/<int:user_id>/', views.cancel_outgoing_request, name='cancel_outgoing_request'),
+    path('friends/add/', views.add_friend, name='add_friend')
 ]
