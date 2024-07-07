@@ -50,18 +50,26 @@ def handle_outgoing_request(request, user_id):
     request_recipient = get_object_or_404(User, id=user_id)
 
     if request_recipient in user.get_outgoing_requests():
-        if 'cancel' in request.POST:
-            user.friends.remove(request_recipient)
-        else:
-            messages.error(request, 'Invalid action')
+        user.friends.remove(request_recipient)
     else:
         messages.error(request, 'No such friend request')
 
     return redirect('chat_home')
 
 
-def remove_friend(request):
-    pass
+@login_required(redirect_field_name=None)
+@require_POST
+def remove_friend(request, user_id):
+    user = request.user
+    friend = get_object_or_404(User, id=user_id)
+
+    if friend in user.friends_mutual:
+        user.friends.remove(friend)
+        friend.friends.remove(user)
+    else:
+        messages.error(request, 'No such user in your friends list')
+
+    return redirect('chat_home')
 
 
 @login_required
