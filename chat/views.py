@@ -9,15 +9,18 @@ User = get_user_model()
 
 @login_required(redirect_field_name=None)
 def home(request):
+    recent_chats = Message.get_recent_chats(request.user)
+
     return render(request, 'chat/home.html', {
-        'title': 'Home'
+        'title': 'Home',
+        'recent_chats': recent_chats
     })
 
 
 @login_required
 def direct_message(request, username):
     sender = request.user
-    recipient = get_object_or_404(User, username=username)
+    recipient = get_object_or_404(User, username__iexact=username)
 
     if request.method == 'POST':
         form = MessageForm(request.POST)

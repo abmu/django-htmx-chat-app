@@ -2,4 +2,10 @@
 {% block content %}
     <h1>Home</h1>
     <p>Signed in as: {{ user }}</p>
+    {% for chat in recent_chats|dictsortreversed:"timestamp" %}
+        <ul>
+            <li>{{ chat.other_user }}</li>
+            <li>{{ chat.timestamp }}</li>
+        </ul>
+    {% endfor %}
 {% endblock content %}
