@@ -45,13 +45,11 @@ class Message(models.Model):
                 chats[other_user.id] = {
                     'other_user': other_user,
                     'last_sender': message.sender,
-                    'last_message': message.content,
+                    'last_content': message.content,
                     'timestamp': message.timestamp
                 }
-
-        # CAN CHOOSE TO SORT HERE OR IN TEMPLATE
-        # recent_chats = sorted(chats.values(), key=lambda msg: msg['timestamp'], reverse=True)
-
-        return chats.values()
+        
+        recent_chats = sorted(chats.values(), key=lambda msg: msg['timestamp'], reverse=True)
+        return recent_chats
 
 

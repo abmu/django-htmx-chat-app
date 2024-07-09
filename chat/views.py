@@ -21,8 +21,11 @@ def home(request):
 def direct_message(request, username):
     sender = request.user
     recipient = get_object_or_404(User, username__iexact=username)
+    is_friends = sender.friends_mutual.contains(recipient)
 
     if request.method == 'POST':
+        if not is_friends:
+            return redirect('direct_message', username)
         form = MessageForm(request.POST)
         if form.is_valid():
             form.instance.sender = sender
@@ -38,5 +41,6 @@ def direct_message(request, username):
         'title': 'Direct message',
         'form': form,
         'recipient': recipient,
-        'all_messages': messages
+        'all_messages': messages,
+        'is_friends': is_friends
     })
