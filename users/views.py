@@ -28,7 +28,7 @@ def remove_friend(request, user_id):
     user = request.user
     friend = get_object_or_404(User, id=user_id)
 
-    if friend in user.friends_mutual:
+    if user.friends_mutual.contains(friend):
         user.friends.remove(friend)
         friend.friends.remove(user)
     else:
@@ -54,7 +54,7 @@ def handle_incoming_request(request, user_id):
     user = request.user
     request_sender = get_object_or_404(User, id=user_id)
 
-    if request_sender in user.get_incoming_requests():
+    if user.get_incoming_requests().contains(request_sender):
         if 'accept' in request.POST:
             user.friends.add(request_sender)
         elif 'reject' in request.POST:
@@ -84,7 +84,7 @@ def cancel_outgoing_request(request, user_id):
     user = request.user
     request_recipient = get_object_or_404(User, id=user_id)
 
-    if request_recipient in user.get_outgoing_requests():
+    if user.get_outgoing_requests().contains(request_recipient):
         user.friends.remove(request_recipient)
     else:
         messages.error(request, 'No such friend request')
