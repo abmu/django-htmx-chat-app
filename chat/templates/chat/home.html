@@ -2,9 +2,10 @@
 {% block content %}
     <h1>Home</h1>
     <p>Signed in as: {{ user }}</p>
-    {% for chat in recent_chats|dictsortreversed:"timestamp" %}
+    {% for chat in recent_chats %}
         <ul>
-            <li>{{ chat.other_user }}</li>
+            <li><a href="{% url 'direct_message' chat.other_user %}">{{ chat.other_user }}</a></li>
+            <li>{{ chat.last_sender }}: {{ chat.last_content }}</li>
             <li>{{ chat.timestamp }}</li>
         </ul>
     {% endfor %}

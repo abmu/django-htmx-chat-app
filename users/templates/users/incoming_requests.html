@@ -4,7 +4,7 @@
     <ul>
         {% for sender in incoming_requests %}
             <li>
-                {{ sender.username }}
+                <a href="{% url 'direct_message' sender.username %}">{{ sender.username }}</a>
                 <form method="POST" action="{% url 'handle_incoming_request' sender.id %}">
                     {% csrf_token %}
                     <button type="submit" name="accept">Accept</button>
