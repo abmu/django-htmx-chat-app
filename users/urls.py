@@ -3,7 +3,7 @@ from allauth.account import views as allauth_views
 from . import views
 
 urlpatterns = [
-    path('login/', allauth_views.LoginView.as_view(), name='account_login'),
+    path('login/', allauth_views.LoginView.as_view(template_name='account/login.html', extra_context={'title': 'Login'}), name='account_login'),
     path('logout/', allauth_views.LogoutView.as_view(), name='account_logout'),
     path('inactive/', allauth_views.AccountInactiveView.as_view(), name='account_inactive'),
     path('signup/', allauth_views.SignupView.as_view(), name='account_signup'),
@@ -12,7 +12,6 @@ urlpatterns = [
     path('confirm-email/', allauth_views.EmailVerificationSentView.as_view(), name='account_email_verification_sent'),
     re_path(r'^confirm-email/(?P<key>[-:\w]+)/$', allauth_views.ConfirmEmailView.as_view(), name='account_confirm_email'),
     path('password-change/', allauth_views.PasswordChangeView.as_view(), name='account_change_password'),
-    path('password-set/', allauth_views.PasswordSetView.as_view(), name='account_set_password'),
     path('password-reset/', allauth_views.PasswordResetView.as_view(), name='account_reset_password'),
     path('password-reset/done/', allauth_views.PasswordResetDoneView.as_view(), name='account_reset_password_done'),
     re_path(r'^password-reset/confirm/(?P<uidb36>[0-9A-Za-z]+)-(?P<key>.+)/$', allauth_views.PasswordResetFromKeyView.as_view(), name='account_reset_password_from_key'),

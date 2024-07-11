@@ -1,0 +1,45 @@
+{% extends "account/base_entrance.html" %}
+{% load allauth %}
+{% load i18n %}
+{% block head_title %}
+    {% trans "Confirm Access" %}
+{% endblock head_title %}
+{% block content %}
+    {% element h1 %}
+        {% trans "Confirm Access" %}
+    {% endelement %}
+    {% element p %}
+        {% blocktranslate %}Please reauthenticate to safeguard your account.{% endblocktranslate %}
+    {% endelement %}
+    {% element p %}
+        {% blocktranslate %}Enter your password:{% endblocktranslate %}
+    {% endelement %}
+    {% url 'account_reauthenticate' as action_url %}
+    {% element form form=form method="post" action=action_url %}
+        {% slot body %}
+            {% csrf_token %}
+            {% element fields form=form unlabeled=True %}
+            {% endelement %}
+            {{ redirect_field }}
+        {% endslot %}
+        {% slot actions %}
+            {% element button type="submit" %}
+                {% trans "Confirm" %}
+            {% endelement %}
+        {% endslot %}
+    {% endelement %}
+    {% if reauthentication_alternatives %}
+        {% element hr %}
+        {% endelement %}
+        {% element h2 %}
+            {% translate "Alternative options" %}
+        {% endelement %}
+        <ul>
+            {% for alt in reauthentication_alternatives %}
+                <li>
+                    <a href="{{ alt.url }}">{{ alt.description }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endblock content %}
