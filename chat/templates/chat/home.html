@@ -4,7 +4,7 @@
     <p>Signed in as: {{ user }}</p>
     {% for chat in recent_chats %}
         <ul>
-            <li><a href="{% url 'direct_message' chat.other_user %}">{{ chat.other_user }}</a></li>
+            <li><a href="{% url 'direct_message' chat.other_user %}">{{ chat.other_user }}</a> ({{ chat.unread_count }} new messages)</li>
             <li>{{ chat.last_sender }}: {{ chat.last_content }}</li>
             <li>{{ chat.timestamp }}</li>
         </ul>

@@ -56,14 +56,30 @@ class Message(models.Model):
 
         chats = {}
         for message in user_messages:
-            other_user = message.recipient if message.sender == user else message.sender
-            if other_user.id not in chats or chats[other_user.id]['timestamp'] < message.timestamp:
+            if message.sender == user:
+                other_user = message.recipient
+                is_unread = False
+            else:
+                other_user = message.sender
+                is_unread = not message.read
+
+            if other_user.id not in chats:
                 chats[other_user.id] = {
                     'other_user': other_user,
                     'last_sender': message.sender,
                     'last_content': message.content,
-                    'timestamp': message.timestamp
+                    'timestamp': message.timestamp,
+                    'unread_count': 1 if is_unread else 0
                 }
+            else:
+                if chats[other_user.id]['timestamp'] < message.timestamp:
+                    chats[other_user.id].update({
+                        'last_sender': message.sender,
+                        'last_content': message.content,
+                        'timestamp': message.timestamp,
+                    })
+                if is_unread:
+                    chats[other_user.id]['unread_count'] += 1
         
         recent_chats = sorted(chats.values(), key=lambda msg: msg['timestamp'], reverse=True)
         return recent_chats
