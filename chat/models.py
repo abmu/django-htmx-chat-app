@@ -18,17 +18,33 @@ class Message(models.Model):
     )
     content = models.TextField()
     timestamp = models.DateTimeField(default=timezone.now)
+    read = models.BooleanField(default=False)
 
     def __str__(self):
         return self.content
     
     @classmethod
-    def get_messages(cls, user1, user2):
-        '''Returns all of the messages sent directly between two users'''
-        return cls.objects.filter(
-            models.Q(sender=user1, recipient=user2) |
-            models.Q(sender=user2, recipient=user1)
-        ).order_by('timestamp')
+    def get_messages(cls, request_user, other_user):
+        '''Returns the old and new unread messages sent directly between two users'''
+        all_messages = cls.objects.filter(
+            models.Q(sender=request_user, recipient=other_user) |
+            models.Q(sender=other_user, recipient=request_user)
+        ).order_by('-timestamp')
+
+        new_messages = all_messages.filter(recipient=request_user, read=False)
+        new_messages_pk = []
+        new_messages_list = []
+        for message in new_messages: # evaluate lazy queryset before the messages are updated
+            new_messages_pk.append(message.pk)
+            new_messages_list.append(message)
+        new_messages.update(read=True)
+
+        old_messages = all_messages.exclude(pk__in=new_messages_pk)
+
+        return {
+            'old': old_messages,
+            'new': new_messages_list
+        }
     
     @classmethod
     def get_recent_chats(cls, user):

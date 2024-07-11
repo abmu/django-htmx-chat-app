@@ -1,5 +1,5 @@
-{% extends 'chat/base.html' %}
-{% block content %}
+{% extends 'chat/home.html' %}
+{% block subcontent %}
     <h1>{{ recipient }}</h1>
     {% if not is_friends %}
         <p>You cannot message this user because they are not on your friends list</p>
@@ -9,12 +9,24 @@
         {{ form }}
         <button type="submit">Send</button>
     </form>
-    {% for message in all_messages %}
+    <p>New messages</p>
+    {% for message in all_messages.new %}
+    <ul>
+        <li>From: {{ message.sender }}</li>
+        <li>To: {{ message.recipient }}</li>
+        <li style="white-space: pre-wrap;">{{ message.content }}</li>
+        <li>{{ message.timestamp }}</li>
+        <li>Read: {{ message.read }}</li>
+    </ul>
+    {% endfor %}
+    <p>Old messages</p>
+    {% for message in all_messages.old %}
         <ul>
             <li>From: {{ message.sender }}</li>
             <li>To: {{ message.recipient }}</li>
             <li style="white-space: pre-wrap;">{{ message.content }}</li>
             <li>{{ message.timestamp }}</li>
+            <li>Read: {{ message.read }}</li>
         </ul>
     {% endfor %}
-{% endblock content %}
+{% endblock subcontent %}
