@@ -106,3 +106,8 @@ def add_friend(request):
         'title': 'Add friend',
         'form': form
     })
+
+
+@login_required
+def settings(request):
+    return redirect('account_email')
