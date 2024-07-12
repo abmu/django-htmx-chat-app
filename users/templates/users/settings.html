@@ -1,0 +1,17 @@
+{% extends 'chat/base.html' %}
+{% block content %}
+    <ul>
+        <li>
+            <a href="{% url 'account_email' %}">Change email</a>
+        </li>
+        <li>
+            <a href="{% url 'account_change_password' %}">Change password</a>
+        </li>
+        <li>
+            <a href="#">Delete account</a>
+        </li>
+    </ul>
+    
+    {% block subcontent %}
+    {% endblock subcontent %}
+{% endblock content %}
