@@ -1,4 +1,4 @@
-{% extends "account/base_entrance.html" %}
+{% extends "chat/base.html" %}
 {% load i18n %}
 {% load allauth account %}
 {% block head_title %}
@@ -45,5 +45,4 @@
     {% if SOCIALACCOUNT_ENABLED %}
         {% include "socialaccount/snippets/login.html" with page_layout="entrance" %}
     {% endif %}
-    hello
 {% endblock content %}

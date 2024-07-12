@@ -1,10 +1,10 @@
-{% extends "account/base_manage_email.html" %}
+{% extends "users/settings.html" %}
 {% load i18n %}
 {% load allauth %}
 {% block head_title %}
     {% trans "Email Address" %}
 {% endblock head_title %}
-{% block content %}
+{% block subcontent %}
     {% element h1 %}
         {% trans "Email Address" %}
     {% endelement %}
@@ -65,4 +65,4 @@
             <input type="hidden" name="email" value="{{ new_emailaddress.email }}">
         </form>
     {% endif %}
-{% endblock content %}
+{% endblock subcontent %}
