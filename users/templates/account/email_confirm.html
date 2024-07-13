@@ -1,4 +1,4 @@
-{% extends "chat/base.html" %}
+{% extends 'chat/base.html' %}
 {% load i18n %}
 {% load account %}
 {% load allauth %}
@@ -18,7 +18,7 @@
                     {% csrf_token %}
                     {{ redirect_field }}
                     {% element button type="submit" %}
-                        {% trans 'Confirm' %}
+                        {% trans "Confirm" %}
                     {% endelement %}
                 {% endslot %}
             {% endelement %}

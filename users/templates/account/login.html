@@ -1,4 +1,4 @@
-{% extends "chat/base.html" %}
+{% extends 'chat/base.html' %}
 {% load i18n %}
 {% load allauth account %}
 {% block content %}
@@ -29,17 +29,5 @@
                 {% endelement %}
             {% endslot %}
         {% endelement %}
-    {% endif %}
-    {% if LOGIN_BY_CODE_ENABLED %}
-        {% element hr %}
-        {% endelement %}
-        {% element h2 %}
-            {% element button href=request_login_code_url tags="prominent,login,secondary" %}
-                {% trans "Mail me a sign-in code" %}
-            {% endelement %}
-        {% endelement %}
-    {% endif %}
-    {% if SOCIALACCOUNT_ENABLED %}
-        {% include "socialaccount/snippets/login.html" with page_layout="entrance" %}
     {% endif %}
 {% endblock content %}
