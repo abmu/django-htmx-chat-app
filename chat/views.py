@@ -35,12 +35,12 @@ def direct_message(request, username):
     else:
         form = MessageForm()
 
-    messages = Message.get_messages(sender, recipient)
+    grouped_messages = Message.get_grouped_messages(sender, recipient)
     
     return render(request, 'chat/direct_message.html', {
         'title': 'Direct message',
         'form': form,
         'recipient': recipient,
-        'all_messages': messages,
+        'grouped_messages': grouped_messages,
         'is_friends': is_friends
     })

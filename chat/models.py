@@ -24,27 +24,43 @@ class Message(models.Model):
         return self.content
     
     @classmethod
-    def get_messages(cls, request_user, other_user):
-        '''Returns the old and new unread messages sent directly between two users'''
+    def get_grouped_messages(cls, request_user, other_user):
+        '''Returns the messages sent directly between two users, grouped by date sent'''
         all_messages = cls.objects.filter(
             models.Q(sender=request_user, recipient=other_user) |
             models.Q(sender=other_user, recipient=request_user)
-        ).order_by('-timestamp')
+        ).order_by('timestamp')
 
-        new_messages = all_messages.filter(recipient=request_user, read=False)
-        new_messages_pk = []
-        new_messages_list = []
-        for message in new_messages: # evaluate lazy queryset before the messages are updated
-            new_messages_pk.append(message.pk)
-            new_messages_list.append(message)
-        new_messages.update(read=True)
+        grouped_messages = {}
+        new_message_found = False
+        for message in all_messages:
+            date = message.timestamp.date()
+            if date not in grouped_messages:
+                grouped_messages[date] = {
+                    'date': date,
+                    'messages': []
+                }
+            
+            is_new = not message.read and message.recipient == request_user
+            is_first_new = is_new and not new_message_found
+            if is_first_new:
+                new_message_found = True
 
-        old_messages = all_messages.exclude(pk__in=new_messages_pk)
+            grouped_messages[date]['messages'].append({
+                'sender': message.sender,
+                'recipient': message.recipient,
+                'content': message.content,
+                'timestamp': message.timestamp,
+                'was_read': message.read,
+                'is_first_new': is_first_new
+            })
 
-        return {
-            'old': old_messages,
-            'new': new_messages_list
-        }
+            if is_new:
+                message.read = True
+                message.save()
+
+        messages = sorted(grouped_messages.values(), key=lambda group: group['date'])
+        return messages
     
     @classmethod
     def get_recent_chats(cls, user):
@@ -68,20 +84,20 @@ class Message(models.Model):
                     'other_user': other_user,
                     'last_sender': message.sender,
                     'last_content': message.content,
-                    'timestamp': message.timestamp,
-                    'unread_count': 1 if is_unread else 0
+                    'last_timestamp': message.timestamp,
+                    'unread_count': 0
                 }
-            else:
-                if chats[other_user.id]['timestamp'] < message.timestamp:
-                    chats[other_user.id].update({
-                        'last_sender': message.sender,
-                        'last_content': message.content,
-                        'timestamp': message.timestamp,
-                    })
-                if is_unread:
-                    chats[other_user.id]['unread_count'] += 1
+            elif chats[other_user.id]['last_timestamp'] < message.timestamp:
+                chats[other_user.id].update({
+                    'last_sender': message.sender,
+                    'last_content': message.content,
+                    'last_timestamp': message.timestamp,
+                })
+
+            if is_unread:
+                chats[other_user.id]['unread_count'] += 1
         
-        recent_chats = sorted(chats.values(), key=lambda msg: msg['timestamp'], reverse=True)
+        recent_chats = sorted(chats.values(), key=lambda msg: msg['last_timestamp'], reverse=True)
         return recent_chats
 
 

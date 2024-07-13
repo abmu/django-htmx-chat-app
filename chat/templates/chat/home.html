@@ -6,7 +6,7 @@
         <ul>
             <li><a href="{% url 'direct_message' chat.other_user %}">{{ chat.other_user }}</a> ({{ chat.unread_count }} new messages)</li>
             <li>{{ chat.last_sender }}: {{ chat.last_content }}</li>
-            <li>{{ chat.timestamp }}</li>
+            <li>{{ chat.last_timestamp }}</li>
         </ul>
     {% endfor %}
     
