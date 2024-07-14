@@ -24,5 +24,6 @@ urlpatterns = [
     path('friends/add/', views.add_friend, name='add_friend'),
     path('settings/', views.settings, name='settings'),
     path('settings/email/', allauth_views.EmailView.as_view(extra_context={'title': 'Change email address'}), name='account_email'),
-    path('settings/password/', allauth_views.PasswordChangeView.as_view(extra_context={'title': 'Change password'}), name='account_change_password')
+    path('settings/password/', allauth_views.PasswordChangeView.as_view(extra_context={'title': 'Change password'}), name='account_change_password'),
+    path('settings/delete/', views.delete_account, name='delete_account')
 ]

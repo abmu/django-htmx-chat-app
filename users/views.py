@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
-from .forms import AddForm
+from .forms import AddFriendForm, DeleteAccountForm
 from .models import User
 
 
@@ -95,12 +96,12 @@ def cancel_outgoing_request(request, user_id):
 @login_required
 def add_friend(request):
     if request.method == 'POST':
-        form = AddForm(request.POST, initial={'user': request.user})
+        form = AddFriendForm(request.POST, initial={'user': request.user})
         if form.is_valid():
-            form.save(request.user)
+            form.save()
             return redirect('add_friend')
     else:
-        form = AddForm()
+        form = AddFriendForm()
 
     return render(request, 'users/add_friend.html', {
         'title': 'Add friend',
@@ -111,3 +112,22 @@ def add_friend(request):
 @login_required
 def settings(request):
     return redirect('account_email')
+
+
+@login_required
+def delete_account(request):
+    if request.method == 'POST':
+        form = DeleteAccountForm(request.POST, initial={'user': request.user})
+        if form.is_valid():
+            user = request.user
+            logout(request)
+            user.delete()
+            messages.success(request, 'Your account has successfully been deleted')
+            return redirect('chat_home')
+    else:
+        form = DeleteAccountForm()
+
+    return render(request, 'users/delete_account.html', {
+        'title': 'Delete account',
+        'form': form
+    })

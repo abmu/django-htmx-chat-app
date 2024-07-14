@@ -1,0 +1,10 @@
+{% extends 'users/settings.html' %}
+{% block subcontent %}
+    <h1>Delete account</h1>
+    <p>Please enter your password to confirm that you want to delete your account</p>
+    <form method="POST" action="{% url 'delete_account' %}">
+        {% csrf_token %}
+        {{ form }}
+        <button type="submit">Delete account</button>
+    </form>
+{% endblock subcontent %}
