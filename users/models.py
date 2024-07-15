@@ -25,7 +25,7 @@ class User(AbstractUser):
         return User.objects.filter(friends=self).exclude(pk__in=self.friends_mutual).order_by(Lower('username'))
     
     def delete_account(self):
-        '''Delete a user's account, but preserve the old user id in the database'''
+        '''Delete a user's account, but keep the old user id in the database'''
         self.is_active = False
         self.username = f'{self.DELETED_USER_PREFIX}{self.id}'
         self.email = ''

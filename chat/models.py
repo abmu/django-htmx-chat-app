@@ -102,5 +102,5 @@ class Message(models.Model):
 
     @classmethod
     def remove_redundant_messages(cls):
-        '''Remove messages where both the sender and recipient have deleted their accounts'''
+        '''Remove all messages from the database where both the sender and recipient have deleted their accounts'''
         cls.objects.filter(sender__is_active=False, recipient__is_active=False).delete()
