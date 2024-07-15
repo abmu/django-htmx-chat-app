@@ -100,4 +100,7 @@ class Message(models.Model):
         recent_chats = sorted(chats.values(), key=lambda msg: msg['last_timestamp'], reverse=True)
         return recent_chats
 
-
+    @classmethod
+    def remove_redundant_messages(cls):
+        '''Remove messages where both the sender and recipient have deleted their accounts'''
+        cls.objects.filter(sender__is_active=False, recipient__is_active=False).delete()

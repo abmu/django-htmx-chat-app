@@ -8,8 +8,8 @@ class UserSignupForm(SignupForm):
     def clean_username(self):
         username = super().clean_username()
 
-        if username.startswith('deleted_user_'):
-            raise forms.ValidationError('Username cannot start with \'deleted_user_\'')
+        if User.has_deleted_user_prefix(username):
+            raise forms.ValidationError(f'Username cannot start with \'{User.DELETED_USER_PREFIX}\'')
         
         return username
 
