@@ -145,6 +145,10 @@ ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
 ACCOUNT_CHANGE_EMAIL = True
 
+ACCOUNT_FORMS = {
+    'signup': 'users.forms.UserSignupForm'
+}
+
 
 LOGIN_REDIRECT_URL = 'chat_home'
 

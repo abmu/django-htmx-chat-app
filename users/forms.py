@@ -1,6 +1,17 @@
 from django import forms
 from django.contrib.auth import authenticate
+from allauth.account.forms import SignupForm
 from .models import User
+
+
+class UserSignupForm(SignupForm):
+    def clean_username(self):
+        username = super().clean_username()
+
+        if username.startswith('deleted_user_'):
+            raise forms.ValidationError('Username cannot start with \'deleted_user_\'')
+        
+        return username
 
 
 class AddFriendForm(forms.Form):
@@ -15,6 +26,9 @@ class AddFriendForm(forms.Form):
         except User.DoesNotExist:
             raise forms.ValidationError('User with this username does not exist')
         
+        if not self.friend.is_active:
+            raise forms.ValidationError('You cannot add inactive accounts')
+
         if self.user == self.friend:
             raise forms.ValidationError('You cannot add yourself as a friend')
         

@@ -121,7 +121,7 @@ def delete_account(request):
         if form.is_valid():
             user = request.user
             logout(request)
-            user.delete()
+            user.delete_account()
             messages.success(request, 'Your account has successfully been deleted')
             return redirect('chat_home')
     else:
