@@ -4,6 +4,11 @@
     {% if not is_friends %}
         <p>You cannot message this user because they are not on your friends list</p>
     {% endif %}
+
+    <div hx-ext="ws" ws-connect="/ws/chat/{{ recipient }}/">
+
+    </div>
+
     <form method="POST" action="{% url 'direct_message' recipient.username %}">
         {% csrf_token %}
         {{ form }}

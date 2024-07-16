@@ -162,3 +162,9 @@ EMAIL_FILE_PATH = BASE_DIR / 'emails'
 
 
 ASGI_APPLICATION = 'config.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+    }
+}
