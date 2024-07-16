@@ -5,8 +5,10 @@
         <p>You cannot message this user because they are not on your friends list</p>
     {% endif %}
 
-    <div hx-ext="ws" ws-connect="/ws/chat/{{ recipient }}/">
-
+    <div hx-ext="ws" ws-connect="/ws/chat/{{ recipient.id }}/">
+        <form id="form" ws-send>
+            <input name="message">
+        </form>
     </div>
 
     <form method="POST" action="{% url 'direct_message' recipient.username %}">
@@ -15,20 +17,9 @@
         <button type="submit">Send</button>
     </form>
     {% for group in grouped_messages %}
-        <p>{{ group.date|date:"Y-m-d" }}</p>
+        <p>{{ group.date|date:'Y-m-d' }}</p>
         {% for msg in group.messages %}
-            {% if msg.is_first_new %}
-                <p>New messages</p>
-            {% endif %}
-            <ul>
-                <li>From: {{ msg.sender }}</li>
-                <li>To: {{ msg.recipient }}</li>
-                <li style="white-space: pre-wrap;">{{ msg.content }}</li>
-                <li>{{ msg.timestamp }}</li>
-                {% if msg.sender == user %}
-                    <li>Read: {{ msg.was_read }}</li>
-                {% endif %}
-            </ul>
+            {% include 'chat/snippets/message.html' with msg=msg %}
         {% endfor %}
     {% endfor %}
 {% endblock subcontent %}

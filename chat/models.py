@@ -29,10 +29,9 @@ class Message(models.Model):
         all_messages = cls.objects.filter(
             models.Q(sender=request_user, recipient=other_user) |
             models.Q(sender=other_user, recipient=request_user)
-        ).order_by('timestamp')
+        ).order_by('-timestamp')
 
         grouped_messages = {}
-        new_message_found = False
         for message in all_messages:
             date = message.timestamp.date()
             if date not in grouped_messages:
@@ -41,25 +40,20 @@ class Message(models.Model):
                     'messages': []
                 }
             
-            is_new = not message.read and message.recipient == request_user
-            is_first_new = is_new and not new_message_found
-            if is_first_new:
-                new_message_found = True
-
             grouped_messages[date]['messages'].append({
                 'sender': message.sender,
                 'recipient': message.recipient,
                 'content': message.content,
                 'timestamp': message.timestamp,
                 'was_read': message.read,
-                'is_first_new': is_first_new
             })
 
+            is_new = not message.read and message.recipient == request_user
             if is_new:
                 message.read = True
                 message.save()
 
-        messages = sorted(grouped_messages.values(), key=lambda group: group['date'])
+        messages = sorted(grouped_messages.values(), key=lambda group: group['date'], reverse=True)
         return messages
     
     @classmethod

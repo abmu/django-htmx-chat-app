@@ -53,4 +53,5 @@ class User(AbstractUser):
 
     @classmethod
     def has_deleted_user_prefix(cls, username):
+        '''Check if a username starts with the prefix used for deleted users' usernames'''
         return username.startswith(cls.DELETED_USER_PREFIX)
