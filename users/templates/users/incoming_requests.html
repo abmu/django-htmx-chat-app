@@ -7,8 +7,8 @@
                 <a href="{% url 'direct_message' sender.username %}">{{ sender.username }}</a>
                 <form method="POST" action="{% url 'handle_incoming_request' sender.id %}">
                     {% csrf_token %}
-                    <button type="submit" name="accept">Accept</button>
-                    <button type="submit" name="reject">Reject</button>
+                    <button type="submit" name="action" value="accept">Accept</button>
+                    <button type="submit" name="action" value="reject">Reject</button>
                 </form>
             </li>
         {% endfor %}

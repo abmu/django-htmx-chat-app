@@ -41,7 +41,7 @@ class AddFriendForm(forms.Form):
         return entered_username
     
     def save(self):
-        self.user.friends.add(self.friend)
+        self.user.add_friend(self.friend)
 
 
 class DeleteAccountForm(forms.Form):

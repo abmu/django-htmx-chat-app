@@ -24,6 +24,43 @@ class User(AbstractUser):
         '''Returns a queryset of the users who have friended this user, but this user hasn't friended back'''
         return User.objects.filter(friends=self).exclude(pk__in=self.friends_mutual).order_by(Lower('username'))
     
+    def add_friend(self, friend):
+        '''Add a user to this user's friends list'''
+        self.friends.add(friend)
+    
+    def remove_friend(self, friend):
+        '''Returns a tuple containing a boolean success flag (True if the friend is removed, False otherwise), and a message'''
+        if not self.friends_mutual.contains(friend):
+            return False, 'No such user in friends list'
+        
+        self.friends.remove(friend)
+        friend.friends.remove(self)
+        return True, 'Friend successfully removed'
+    
+    def handle_incoming_request(self, request_sender, action):
+        '''Returns a tuple containing a boolean success flag (True if the incoming request is either rejected or accepted successfully, False otherwise), and a message'''
+        if not self.get_incoming_requests().contains(request_sender):
+            return False, 'No such friend request'
+
+        if action == 'accept':
+            self.friends.add(request_sender)
+            message = 'Incoming friend request successfully accepted'
+        elif action == 'reject':
+            request_sender.friends.remove(self)
+            message = 'Incoming friend request successfully rejected'
+        else:
+            return False, 'Invalid action'
+        
+        return True, message
+    
+    def cancel_outgoing_request(self, request_recipient):
+        '''Returns a tuple containing a boolean success flag (True if the outgoing request is cancelled successfully, False otherwise), and a message'''
+        if not self.get_outgoing_requests().contains(request_recipient):
+            return False, 'No such friend request'
+
+        self.friends.remove(request_recipient)
+        return True, 'Outgoing friend request successfully cancelled'
+
     def delete_account(self):
         '''Delete a user's account, but keep the old user id in the database'''
         self.is_active = False
