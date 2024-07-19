@@ -32,10 +32,10 @@ class AddFriendForm(forms.Form):
         if self.user == self.friend:
             raise forms.ValidationError('You cannot add yourself as a friend')
         
-        if self.friend in self.user.friends_mutual:
+        if self.user.has_friend_mutual(self.friend):
             raise forms.ValidationError('You are already friends with this user')
         
-        if self.friend in self.user.get_outgoing_requests():
+        if self.user.has_outgoing_request_to(self.friend):
             raise forms.ValidationError('You have already sent a friend request to this user')
 
         return entered_username

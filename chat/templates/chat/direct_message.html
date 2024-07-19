@@ -7,19 +7,22 @@
 
     <div hx-ext="ws" ws-connect="/ws/chat/{{ recipient.id }}/">
         <form id="form" ws-send>
-            <input name="message">
+            <input name="content">
         </form>
     </div>
 
-    <form method="POST" action="{% url 'direct_message' recipient.username %}">
-        {% csrf_token %}
-        {{ form }}
-        <button type="submit">Send</button>
-    </form>
-    {% for group in grouped_messages %}
-        <p>{{ group.date|date:'Y-m-d' }}</p>
-        {% for msg in group.messages %}
-            {% include 'chat/snippets/message.html' with msg=msg %}
+    <div id="messages">
+        {% for group in grouped_messages %}
+            <p>{{ group.date|date:'Y-m-d' }}</p>
+            {% for msg in group.messages %}
+                {% include 'chat/snippets/message.html' with msg=msg %}
+            {% endfor %}
         {% endfor %}
-    {% endfor %}
+    </div>
+
+    <script>
+        document.body.addEventListener('htmx:wsAfterMessage', (e) => {
+            console.log(e.detail)
+        })
+    </script>
 {% endblock subcontent %}

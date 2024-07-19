@@ -1,13 +1,15 @@
-<ul>
-    <li>From: {{ msg.sender }}</li>
-    <li>To: {{ msg.recipient }}</li>
-    <li style="white-space: pre-wrap;">{{ msg.content }}</li>
-    <li>{{ msg.timestamp }}</li>
-    {% if msg.sender == user %}
-        <li>Read: {{ msg.was_read }}</li>
-    {% else %}
-        {% if msg.was_read == False %}
-            <li>New</li>
+<div id="message-{{ msg.id }}">
+    <ul>
+        <li>From: {{ msg.sender }}</li>
+        <li>To: {{ msg.recipient }}</li>
+        <li style="white-space: pre-wrap;">{{ msg.content }}</li>
+        <li>{{ msg.timestamp }}</li>
+        {% if msg.sender == user %}
+            <li>Read: {{ msg.read }}</li>
+        {% else %}
+            {% if msg.read == False %}
+                <li>New</li>
+            {% endif %}
         {% endif %}
-    {% endif %}
-</ul>
+    </ul>
+</div>

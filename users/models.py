@@ -16,13 +16,25 @@ class User(AbstractUser):
         '''Returns a queryset of the users who are friended by this user, and have friended back'''
         return self.friends.filter(friends=self).order_by(Lower('username'))
     
+    def get_incoming_requests(self):
+        '''Returns a queryset of the users who have friended this user, but this user hasn't friended back'''
+        return User.objects.filter(friends=self).exclude(pk__in=self.friends_mutual).order_by(Lower('username'))
+    
     def get_outgoing_requests(self):
         '''Returns a queryset of the users who are friended by this user, but haven't friended back'''
         return self.friends.exclude(pk__in=self.friends_mutual).order_by(Lower('username'))
     
-    def get_incoming_requests(self):
-        '''Returns a queryset of the users who have friended this user, but this user hasn't friended back'''
-        return User.objects.filter(friends=self).exclude(pk__in=self.friends_mutual).order_by(Lower('username'))
+    def has_friend_mutual(self, user):
+        '''Check if there is a mutual friendship between this user and the specified user'''
+        return self.friends_mutual.contains(user)
+    
+    def has_incoming_request_from(self, user):
+        '''Check if this user has received a friend request from the specified user'''
+        return self.get_incoming_requests().contains(user)
+    
+    def has_outgoing_request_to(self, user):
+        '''Check if this user has sent a friend request to the specified user'''
+        return self.get_outgoing_requests().contains(user)
     
     def add_friend(self, friend):
         '''Add a user to this user's friends list'''
@@ -30,7 +42,7 @@ class User(AbstractUser):
     
     def remove_friend(self, friend):
         '''Returns a tuple containing a boolean success flag (True if the friend is removed, False otherwise), and a message'''
-        if not self.friends_mutual.contains(friend):
+        if not self.has_friend_mutual(friend):
             return False, 'No such user in friends list'
         
         self.friends.remove(friend)
@@ -39,8 +51,8 @@ class User(AbstractUser):
     
     def handle_incoming_request(self, request_sender, action):
         '''Returns a tuple containing a boolean success flag (True if the incoming request is either rejected or accepted successfully, False otherwise), and a message'''
-        if not self.get_incoming_requests().contains(request_sender):
-            return False, 'No such friend request'
+        if not self.has_incoming_request_from(request_sender):
+            return False, 'No such incoming friend request'
 
         if action == 'accept':
             self.friends.add(request_sender)
@@ -55,8 +67,8 @@ class User(AbstractUser):
     
     def cancel_outgoing_request(self, request_recipient):
         '''Returns a tuple containing a boolean success flag (True if the outgoing request is cancelled successfully, False otherwise), and a message'''
-        if not self.get_outgoing_requests().contains(request_recipient):
-            return False, 'No such friend request'
+        if not self.has_outgoing_request_to(request_recipient):
+            return False, 'No such outgoing friend request'
 
         self.friends.remove(request_recipient)
         return True, 'Outgoing friend request successfully cancelled'

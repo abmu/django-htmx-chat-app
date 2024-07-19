@@ -41,11 +41,12 @@ class Message(models.Model):
                 }
             
             grouped_messages[date]['messages'].append({
+                'id': message.id,
                 'sender': message.sender,
                 'recipient': message.recipient,
                 'content': message.content,
                 'timestamp': message.timestamp,
-                'was_read': message.read,
+                'read': message.read
             })
 
             is_new = not message.read and message.recipient == request_user
