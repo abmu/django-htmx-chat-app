@@ -77,8 +77,6 @@ class ChatConsumer(WebsocketConsumer):
             message.read = True
             message.save()
 
-            self.send_message_read_event(self.channel_layer, self.group_name, message)
-
         html = get_template('chat/snippets/htmx_message.html').render(
             context={
                 'msg': message,
