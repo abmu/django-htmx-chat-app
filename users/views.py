@@ -25,9 +25,9 @@ def friends_list(request):
 
 @login_required(redirect_field_name=None)
 @require_POST
-def remove_friend(request, user_id):
+def remove_friend(request, username):
     user = request.user
-    friend = get_object_or_404(User, id=user_id)
+    friend = get_object_or_404(User, username=username)
     
     success, message = user.remove_friend(friend)
     if not success:
@@ -49,9 +49,9 @@ def incoming_requests(request):
 
 @login_required(redirect_field_name=None)
 @require_POST
-def handle_incoming_request(request, user_id):
+def handle_incoming_request(request, username):
     user = request.user
-    request_sender = get_object_or_404(User, id=user_id)
+    request_sender = get_object_or_404(User, username=username)
 
     action = request.POST.get('action')
     if action not in ('accept', 'reject'):
@@ -77,9 +77,9 @@ def outgoing_requests(request):
 
 @login_required(redirect_field_name=None)
 @require_POST
-def cancel_outgoing_request(request, user_id):
+def cancel_outgoing_request(request, username):
     user = request.user
-    request_recipient = get_object_or_404(User, id=user_id)
+    request_recipient = get_object_or_404(User, username=username)
 
     success, message = user.cancel_outgoing_request(request_recipient)
     if not success:

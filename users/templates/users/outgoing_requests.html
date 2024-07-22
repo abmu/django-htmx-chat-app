@@ -5,7 +5,7 @@
         {% for recipient in outgoing_requests %}
             <li>
                 <a href="{% url 'direct_message' recipient.username %}">{{ recipient.username }}</a>
-                <form method="POST" action="{% url 'cancel_outgoing_request' recipient.id %}">
+                <form method="POST" action="{% url 'cancel_outgoing_request' recipient.username %}">
                     {% csrf_token %}
                     <button type="submit" name="action" value="cancel">Cancel</button>
                 </form>

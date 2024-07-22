@@ -5,7 +5,7 @@
         {% for friend in friends_mutual %}
             <li>
                 <a href="{% url 'direct_message' friend.username %}">{{ friend.username }}</a>
-                <form method="POST" action="{% url 'remove_friend' friend.id %}">
+                <form method="POST" action="{% url 'remove_friend' friend.username %}">
                     {% csrf_token %}
                     <button type="submit" name="action" value="remove">Remove</button>
                 </form>

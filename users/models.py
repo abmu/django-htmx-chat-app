@@ -11,6 +11,12 @@ class User(AbstractUser):
 
     friends = models.ManyToManyField('self', blank=True, symmetrical=False)
 
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['username'], name='username_idx')
+        ]
+
     @cached_property
     def friends_mutual(self):
         '''Returns a queryset of the users who are friended by this user, and have friended back'''
