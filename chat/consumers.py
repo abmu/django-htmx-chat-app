@@ -5,6 +5,7 @@ from django.template.loader import get_template
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from .models import Message
+from .utils import get_group_name
 
 User = get_user_model()
 
@@ -16,27 +17,19 @@ class ChatConsumer(WebsocketConsumer):
             self.close()
             return
         
-        other_user_id = self.scope['url_route']['kwargs']['user_id']
-        self.other_user = get_object_or_404(User, id=other_user_id)
+        other_user_username = self.scope['url_route']['kwargs']['username']
+        self.other_user = get_object_or_404(User, username=other_user_username)
         if not self.user.has_friend_mutual(self.other_user):
             self.close()
             return
 
-        self.group_name = self.get_group_name(self.user.id, other_user_id)
+        self.group_name = get_group_name(self.user.username, other_user_username)
 
         async_to_sync(self.channel_layer.group_add)(
             self.group_name, self.channel_name
-        )
+        ) 
 
         self.accept()
-
-    @classmethod
-    def get_group_name(cls, id_1, id_2):
-        id_1 = int(id_1)
-        id_2 = int(id_2)
-        if id_1 < id_2:
-            return f'chat_{id_1}_{id_2}'
-        return f'chat_{id_2}_{id_1}'
 
     def disconnect(self, close_code):
         if hasattr(self, 'group_name'):
@@ -77,6 +70,13 @@ class ChatConsumer(WebsocketConsumer):
             message.read = True
             message.save()
 
+            async_to_sync(self.channel_layer.group_send)(
+                self.group_name, {
+                    'type': 'message_read',
+                    'message': message
+                }
+            )
+
         html = get_template('chat/snippets/htmx_message.html').render(
             context={
                 'msg': message,
@@ -86,15 +86,21 @@ class ChatConsumer(WebsocketConsumer):
 
         self.send(text_data=html)
 
-    @classmethod
-    def send_message_read_event(cls, channel_layer, group_name, message):
-        async_to_sync(channel_layer.group_send)(
-            group_name, {
-                'type': 'message_read',
-                'message': message 
-            }
-        )
-
     def message_read(self, event):
         message = event['message']
-        self.send(text_data=f'{message.id}')
+        if self.user != message.sender:
+            return
+
+        self.send(text_data=json.dumps({
+            'type': 'message_read',
+            'messageId': f'{message.uuid}'
+        }))
+
+    def all_messages_read(self, event):
+        sender = event['sender']
+        if self.user != sender:
+            return
+
+        self.send(text_data=json.dumps({
+            'type': 'all_messages_read'
+        }))

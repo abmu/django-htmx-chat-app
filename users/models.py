@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models.functions import Lower
 from django.contrib.auth.models import AbstractUser
 from django.utils.functional import cached_property
+from uuid import uuid4
 from allauth.account.models import EmailAddress
 from chat.models import Message
 
@@ -9,6 +10,7 @@ from chat.models import Message
 class User(AbstractUser):
     DELETED_USER_PREFIX = 'deleted_user_'
 
+    uuid = models.UUIDField(default=uuid4, unique=True, editable=False)
     friends = models.ManyToManyField('self', blank=True, symmetrical=False)
 
     
@@ -80,9 +82,9 @@ class User(AbstractUser):
         return True, 'Outgoing friend request successfully cancelled'
 
     def delete_account(self):
-        '''Delete a user's account, but keep the old user id in the database'''
+        '''Delete a user's account data, but keep the old user id in the database'''
         self.is_active = False
-        self.username = f'{self.DELETED_USER_PREFIX}{self.id}'
+        self.username = f'{self.DELETED_USER_PREFIX}{self.uuid}'
         self.email = ''
         EmailAddress.objects.filter(user=self).delete()
         self.set_unusable_password()

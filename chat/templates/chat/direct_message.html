@@ -5,7 +5,7 @@
         <p>You cannot message this user because they are not on your friends list</p>
     {% endif %}
 
-    <div hx-ext="ws" ws-connect="/ws/chat/{{ recipient.id }}/">
+    <div hx-ext="ws" ws-connect="/ws/chat/{{ recipient.username }}/">
         <form id="form" ws-send>
             <input name="content">
         </form>
@@ -15,14 +15,48 @@
         {% for group in grouped_messages %}
             <p>{{ group.date|date:'Y-m-d' }}</p>
             {% for msg in group.messages %}
-                {% include 'chat/snippets/message.html' with msg=msg %}
+                {% include 'chat/snippets/message.html' %}
             {% endfor %}
         {% endfor %}
     </div>
 
     <script>
         document.body.addEventListener('htmx:wsAfterMessage', (e) => {
-            console.log(e.detail)
-        })
+            const wsMessage = e.detail.message;
+            try {
+                const data = JSON.parse(wsMessage);
+                const user = '{{ user.username }}';
+                
+                if (data.type === 'message_read') {
+                    setMessageRead(user, data.messageId);
+                } else if (data.type === 'all_messages_read') {
+                    setAllMessagesRead(user);
+                }
+            } catch (e) {
+                // If it's not JSON, assume it's a HTML for a chat message
+                // HTMX handles this automatically
+                return;
+            }
+        });
+
+        function setMessageRead(user, messageId) {
+            const messageElement = document.getElementById(`message-${messageId}`);
+            if (messageElement && messageElement.dataset.read === 'false') {
+                updateMessageReadStatus(messageElement);
+            }
+        }
+
+        function setAllMessagesRead(user) {
+            const messageElements = document.querySelectorAll(`.message[data-sender=${user}][data-read=false]`);
+            messageElements.forEach(updateMessageReadStatus);
+        }
+
+        function updateMessageReadStatus(messageElement) {
+            messageElement.dataset.read = true;
+            const readStatusElement = messageElement.querySelector('.read-status');
+            if (readStatusElement) {
+                readStatusElement.textContent = 'Read: True';
+            }
+        }
     </script>
 {% endblock subcontent %}
