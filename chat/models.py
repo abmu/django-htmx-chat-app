@@ -68,18 +68,17 @@ class Message(models.Model):
             group_name = get_group_name(request_user.username, other_user.username)
             async_to_sync(channel_layer.group_send)(
                 group_name, {
-                    'type': 'all_messages_read',
-                    'sender': other_user
+                    'type': 'all_messages_read'
                 }
             )
 
         sorted_grouped_messages = sorted(grouped_messages.values(), key=lambda group: group['date'], reverse=True)
         return sorted_grouped_messages
     
-    @classmethod
-    def get_recent_chats(cls, user):
+    @staticmethod
+    def get_recent_chats(user):
         '''Returns chat info for each of a user's chats, ordered by most recent activity'''
-        user_messages = cls.objects.filter(
+        user_messages = Message.objects.filter(
             models.Q(sender=user) |
             models.Q(recipient=user)
         ).select_related('sender', 'recipient')
@@ -114,7 +113,7 @@ class Message(models.Model):
         recent_chats = sorted(chats.values(), key=lambda msg: msg['last_timestamp'], reverse=True)
         return recent_chats
 
-    @classmethod
-    def remove_redundant_messages(cls):
+    @staticmethod
+    def remove_redundant_messages():
         '''Remove all messages from the database where both the sender and recipient have deleted their accounts'''
-        cls.objects.filter(sender__is_active=False, recipient__is_active=False).delete()
+        Message.objects.filter(sender__is_active=False, recipient__is_active=False).delete()

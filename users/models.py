@@ -5,6 +5,9 @@ from django.utils.functional import cached_property
 from uuid import uuid4
 from allauth.account.models import EmailAddress
 from chat.models import Message
+from chat.utils import get_group_name
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 
 class User(AbstractUser):
@@ -19,6 +22,8 @@ class User(AbstractUser):
             models.Index(fields=['username'], name='username_idx')
         ]
 
+    # NOTE: Using @cached_property here provides limited benefit since the method returns a queryset object, rather than
+    # returning the result of a queryset being evaluated (which would cause a database access to be made and the result cached).
     @cached_property
     def friends_mutual(self):
         '''Returns a queryset of the users who are friended by this user, and have friended back'''
@@ -46,7 +51,18 @@ class User(AbstractUser):
     
     def add_friend(self, friend):
         '''Add a user to this user's friends list'''
+        if self.friends.contains(friend):
+            return
+        
         self.friends.add(friend)
+        if self.has_friend_mutual(friend):
+            channel_layer = get_channel_layer()
+            group_name = get_group_name(self.username, friend.username)
+            async_to_sync(channel_layer.group_send)(
+                group_name, {
+                    'type': 'friendship_created'
+                }
+            )
     
     def remove_friend(self, friend):
         '''Returns a tuple containing a boolean success flag (True if the friend is removed, False otherwise), and a message'''
@@ -55,6 +71,15 @@ class User(AbstractUser):
         
         self.friends.remove(friend)
         friend.friends.remove(self)
+
+        channel_layer = get_channel_layer()
+        group_name = get_group_name(self.username, friend.username)
+        async_to_sync(channel_layer.group_send)(
+            group_name, {
+                'type': 'friendship_removed'
+            }
+        )
+
         return True, 'Friend successfully removed'
     
     def handle_incoming_request(self, request_sender, action):
@@ -63,7 +88,7 @@ class User(AbstractUser):
             return False, 'No such incoming friend request'
 
         if action == 'accept':
-            self.friends.add(request_sender)
+            self.add_friend(request_sender)
             message = 'Incoming friend request successfully accepted'
         elif action == 'reject':
             request_sender.friends.remove(self)
@@ -96,11 +121,11 @@ class User(AbstractUser):
 
         self.remove_redundant_users()
 
-    @classmethod
-    def remove_redundant_users(cls):
+    @staticmethod
+    def remove_redundant_users():
         '''Remove all users from the database who have deleted their account and have no messages'''
         Message.remove_redundant_messages()
-        deleted_users = cls.objects.filter(is_active=False)
+        deleted_users = User.objects.filter(is_active=False)
         for user in deleted_users:
             if not Message.objects.filter(
                 models.Q(sender=user) |
@@ -108,7 +133,7 @@ class User(AbstractUser):
             ).exists():
                 user.delete()
 
-    @classmethod
-    def has_deleted_user_prefix(cls, username):
+    @staticmethod
+    def has_deleted_user_prefix(username):
         '''Check if a username starts with the prefix used for deleted users' usernames'''
-        return username.startswith(cls.DELETED_USER_PREFIX)
+        return username.startswith(User.DELETED_USER_PREFIX)

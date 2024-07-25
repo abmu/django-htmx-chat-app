@@ -20,12 +20,12 @@ def home(request):
 def direct_message(request, username):
     sender = request.user
     recipient = get_object_or_404(User, username__iexact=username)
-    is_friends = sender.has_friend_mutual(recipient)
+    are_friends = sender.has_friend_mutual(recipient)
     grouped_messages = Message.get_grouped_messages(sender, recipient)
     
     return render(request, 'chat/direct_message.html', {
         'title': 'Direct message',
         'recipient': recipient,
-        'is_friends': is_friends,
+        'are_friends': are_friends,
         'grouped_messages': grouped_messages
     })

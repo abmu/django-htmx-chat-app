@@ -14,14 +14,17 @@ class ChatConsumer(WebsocketConsumer):
     def connect(self):
         self.user = self.scope['user']
         if not self.user.is_authenticated:
+            self.accept() # Accept before closing so automatic reconnection is not attempted by the HTMX WS extension
             self.close()
             return
         
         other_user_username = self.scope['url_route']['kwargs']['username']
         self.other_user = get_object_or_404(User, username=other_user_username)
-        if not self.user.has_friend_mutual(self.other_user):
+        if not self.other_user.is_active:
+            self.accept()
             self.close()
             return
+        self.are_friends = self.user.has_friend_mutual(self.other_user)
 
         self.group_name = get_group_name(self.user.username, other_user_username)
 
@@ -38,8 +41,13 @@ class ChatConsumer(WebsocketConsumer):
             )
 
     def receive(self, text_data):
-        if not self.user.is_authenticated or not self.user.has_friend_mutual(self.other_user):
+        if not self.user.is_authenticated or not self.other_user.is_active:
+            self.send(text_data=json.dumps({
+                'type': 'chat_error'
+            }))
             self.close()
+            return
+        elif not self.are_friends:
             return
 
         json_data = json.loads(text_data)
@@ -97,10 +105,19 @@ class ChatConsumer(WebsocketConsumer):
         }))
 
     def all_messages_read(self, event):
-        sender = event['sender']
-        if self.user != sender:
-            return
-
         self.send(text_data=json.dumps({
             'type': 'all_messages_read'
+        }))
+
+    def friendship_created(self, event):
+        self.are_friends = True
+        self.send(text_data=json.dumps({
+            'type': 'friendship_created'
+        }))
+
+    def friendship_removed(self, event):
+        print('removed')
+        self.are_friends = False
+        self.send(text_data=json.dumps({
+            'type': 'friendship_removed'
         }))

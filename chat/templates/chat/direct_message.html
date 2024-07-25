@@ -1,13 +1,16 @@
 {% extends 'chat/home.html' %}
 {% block subcontent %}
     <h1>{{ recipient }}</h1>
-    {% if not is_friends %}
-        <p>You cannot message this user because they are not on your friends list</p>
-    {% endif %}
+    <div id="chat-error"></div>
+    <div id="friendship-status">
+        {% if not are_friends %}
+            {% include 'chat/snippets/not_friends.html' %}
+        {% endif %}
+    </div>
 
     <div hx-ext="ws" ws-connect="/ws/chat/{{ recipient.username }}/">
         <form id="form" ws-send>
-            <input name="content">
+            <input id="chat-input" name="content">
         </form>
     </div>
 
@@ -21,16 +24,39 @@
     </div>
 
     <script>
+        let areFriends = '{{ are_friends|lower }}' === 'true'; // Convert to boolean value
+        
+        document.body.addEventListener('htmx:wsBeforeSend', (e) => {
+
+            // Check if friends before allowing to be sent
+            // Validate that there are no spaces in message (and also on server side)
+            // Cancel message event if one of these is not fulfilled
+
+        });
+
+        document.body.addEventListener('htmx:wsAfterSend', (e) => {
+            const contentInput = document.getElementById('chat-input');
+            contentInput.value = '';
+        });
+
         document.body.addEventListener('htmx:wsAfterMessage', (e) => {
             const wsMessage = e.detail.message;
             try {
                 const data = JSON.parse(wsMessage);
                 const user = '{{ user.username }}';
+
+                console.log(data.type);
                 
                 if (data.type === 'message_read') {
-                    setMessageRead(user, data.messageId);
+                    setMessageRead(data.messageId);
                 } else if (data.type === 'all_messages_read') {
                     setAllMessagesRead(user);
+                } else if (data.type === 'chat_error') {
+                    displayChatErrorMessage();
+                } else if (data.type === 'friendship_created') {
+                    handleFriendshipCreated();
+                } else if (data.type === 'friendship_removed') {
+                    handleFriendshipRemoved();
                 }
             } catch (e) {
                 // If it's not JSON, assume it's a HTML for a chat message
@@ -39,7 +65,7 @@
             }
         });
 
-        function setMessageRead(user, messageId) {
+        function setMessageRead(messageId) {
             const messageElement = document.getElementById(`message-${messageId}`);
             if (messageElement && messageElement.dataset.read === 'false') {
                 updateMessageReadStatus(messageElement);
@@ -47,16 +73,31 @@
         }
 
         function setAllMessagesRead(user) {
-            const messageElements = document.querySelectorAll(`.message[data-sender=${user}][data-read=false]`);
+            const messageElements = document.querySelectorAll(`.message[data-sender="${user}"][data-read="false"]`);
             messageElements.forEach(updateMessageReadStatus);
         }
 
         function updateMessageReadStatus(messageElement) {
-            messageElement.dataset.read = true;
+            messageElement.dataset.read = 'true';
             const readStatusElement = messageElement.querySelector('.read-status');
-            if (readStatusElement) {
-                readStatusElement.textContent = 'Read: True';
-            }
+            readStatusElement.textContent = 'Read: True';
+        }
+
+        function displayChatErrorMessage() {
+            const chatErrorElement = document.getElementById('chat-error');
+            chatErrorElement.innerHTML = '{% include "chat/snippets/chat_error.html" %}';
+        }
+
+        function handleFriendshipCreated() {
+            areFriends = true;
+            const friendshipStatusElement = document.getElementById('friendship-status');
+            friendshipStatusElement.innerHTML = '';
+        }
+
+        function handleFriendshipRemoved() {
+            areFriends = false;
+            const friendshipStatusElement = document.getElementById('friendship-status');
+            friendshipStatusElement.innerHTML = '{% include "chat/snippets/not_friends.html" %}';
         }
     </script>
 {% endblock subcontent %}
