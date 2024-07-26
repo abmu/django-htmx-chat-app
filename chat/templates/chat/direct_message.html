@@ -24,19 +24,19 @@
     </div>
 
     <script>
-        let areFriends = '{{ are_friends|lower }}' === 'true'; // Convert to boolean value
+        let areFriends = '{{ are_friends }}' === 'True'; // Convert string to boolean value
         
         document.body.addEventListener('htmx:wsBeforeSend', (e) => {
-
-            // Check if friends before allowing to be sent
-            // Validate that there are no spaces in message (and also on server side)
-            // Cancel message event if one of these is not fulfilled
-
+            const content = JSON.parse(e.detail.message).content;
+            // Cancel event and don't send message if the users don't have a mutual friendship, or the message is blank
+            if (!areFriends || !content.trim()) {
+                e.preventDefault();
+            }
         });
 
         document.body.addEventListener('htmx:wsAfterSend', (e) => {
-            const contentInput = document.getElementById('chat-input');
-            contentInput.value = '';
+            const chatInputELement = document.getElementById('chat-input');
+            chatInputELement.value = '';
         });
 
         document.body.addEventListener('htmx:wsAfterMessage', (e) => {
@@ -44,14 +44,12 @@
             try {
                 const data = JSON.parse(wsMessage);
                 const user = '{{ user.username }}';
-
-                console.log(data.type);
                 
                 if (data.type === 'message_read') {
                     setMessageRead(data.messageId);
                 } else if (data.type === 'all_messages_read') {
                     setAllMessagesRead(user);
-                } else if (data.type === 'chat_error') {
+                } else if (data.type === 'not_authenticated' || data.type === 'friend_account_deleted') {
                     displayChatErrorMessage();
                 } else if (data.type === 'friendship_created') {
                     handleFriendshipCreated();

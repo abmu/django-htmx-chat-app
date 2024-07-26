@@ -5,15 +5,13 @@ from django.utils.functional import cached_property
 from uuid import uuid4
 from allauth.account.models import EmailAddress
 from chat.models import Message
-from chat.utils import get_group_name
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
+from chat.utils import get_group_name, send_ws_message
 
 
 class User(AbstractUser):
     DELETED_USER_PREFIX = 'deleted_user_'
 
-    uuid = models.UUIDField(default=uuid4, unique=True, editable=False)
+    uuid = models.UUIDField(default=uuid4, editable=False, unique=True)
     friends = models.ManyToManyField('self', blank=True, symmetrical=False)
 
     
@@ -56,13 +54,8 @@ class User(AbstractUser):
         
         self.friends.add(friend)
         if self.has_friend_mutual(friend):
-            channel_layer = get_channel_layer()
-            group_name = get_group_name(self.username, friend.username)
-            async_to_sync(channel_layer.group_send)(
-                group_name, {
-                    'type': 'friendship_created'
-                }
-            )
+            group_name = get_group_name(self, friend)
+            send_ws_message(group_name, 'friendship_created')
     
     def remove_friend(self, friend):
         '''Returns a tuple containing a boolean success flag (True if the friend is removed, False otherwise), and a message'''
@@ -72,13 +65,8 @@ class User(AbstractUser):
         self.friends.remove(friend)
         friend.friends.remove(self)
 
-        channel_layer = get_channel_layer()
-        group_name = get_group_name(self.username, friend.username)
-        async_to_sync(channel_layer.group_send)(
-            group_name, {
-                'type': 'friendship_removed'
-            }
-        )
+        group_name = get_group_name(self, friend)
+        send_ws_message(group_name, 'friendship_removed')
 
         return True, 'Friend successfully removed'
     
@@ -116,6 +104,9 @@ class User(AbstractUser):
         self.save()
         
         for friend in self.friends_mutual:
+            group_name = get_group_name(self, friend)
+            send_ws_message(group_name, 'friend_account_deleted')
+
             self.friends.remove(friend)
             friend.friends.remove(self)
 

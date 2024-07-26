@@ -26,7 +26,7 @@ class ChatConsumer(WebsocketConsumer):
             return
         self.are_friends = self.user.has_friend_mutual(self.other_user)
 
-        self.group_name = get_group_name(self.user.username, other_user_username)
+        self.group_name = get_group_name(self.user, self.other_user)
 
         async_to_sync(self.channel_layer.group_add)(
             self.group_name, self.channel_name
@@ -41,9 +41,9 @@ class ChatConsumer(WebsocketConsumer):
             )
 
     def receive(self, text_data):
-        if not self.user.is_authenticated or not self.other_user.is_active:
+        if not self.user.is_authenticated:
             self.send(text_data=json.dumps({
-                'type': 'chat_error'
+                'type': 'not_authenticated'
             }))
             self.close()
             return
@@ -54,7 +54,7 @@ class ChatConsumer(WebsocketConsumer):
         content = json_data['content']
         if not content or content.isspace():
             return
-        message = self.create_message(content)
+        message = self.create_message(content.strip())
 
         event = {
             'type': 'chat_message',
@@ -116,8 +116,13 @@ class ChatConsumer(WebsocketConsumer):
         }))
 
     def friendship_removed(self, event):
-        print('removed')
         self.are_friends = False
         self.send(text_data=json.dumps({
             'type': 'friendship_removed'
         }))
+
+    def friend_account_deleted(self, event):
+        self.send(text_data=json.dumps({
+            'type': 'friend_account_deleted'
+        }))
+        self.close()

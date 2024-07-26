@@ -2,9 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from uuid import uuid4
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
-from .utils import get_group_name
+from .utils import get_group_name, send_ws_message
 
 
 class Message(models.Model):
@@ -64,13 +62,8 @@ class Message(models.Model):
         if new_messages.exists():
             new_messages.update(read=True)
 
-            channel_layer = get_channel_layer()
-            group_name = get_group_name(request_user.username, other_user.username)
-            async_to_sync(channel_layer.group_send)(
-                group_name, {
-                    'type': 'all_messages_read'
-                }
-            )
+            group_name = get_group_name(request_user, other_user)
+            send_ws_message(group_name, 'all_messages_read')
 
         sorted_grouped_messages = sorted(grouped_messages.values(), key=lambda group: group['date'], reverse=True)
         return sorted_grouped_messages
