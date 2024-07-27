@@ -5,16 +5,31 @@ from django.template.loader import get_template
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from .models import Message
-from .utils import get_group_name
+from .utils import get_chat_group_name, get_notification_group_name
 
 User = get_user_model()
 
+
+class NotificationConsumer(WebsocketConsumer):
+    def connect(self):
+        self.user = self.scope['user']
+        if not self.user.is_authenticated:
+            self.accept() # Accept before closing so automatic reconnection is not attempted by the HTMX WS extension
+            self.close()
+            return
+        
+        self.group_name = get_notification_group_name(self.user)
+        async_to_sync(self.channel_layer.group_add)(
+            self.group_name, self.channel_name
+        ) 
+
+        self.accept()
 
 class ChatConsumer(WebsocketConsumer):
     def connect(self):
         self.user = self.scope['user']
         if not self.user.is_authenticated:
-            self.accept() # Accept before closing so automatic reconnection is not attempted by the HTMX WS extension
+            self.accept()
             self.close()
             return
         
@@ -26,11 +41,10 @@ class ChatConsumer(WebsocketConsumer):
             return
         self.are_friends = self.user.has_friend_mutual(self.other_user)
 
-        self.group_name = get_group_name(self.user, self.other_user)
-
+        self.group_name = get_chat_group_name(self.user, self.other_user)
         async_to_sync(self.channel_layer.group_add)(
             self.group_name, self.channel_name
-        ) 
+        )
 
         self.accept()
 

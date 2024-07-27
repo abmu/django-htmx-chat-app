@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from uuid import uuid4
-from .utils import get_group_name, send_ws_message
+from .utils import get_chat_group_name, send_ws_message
 
 
 class Message(models.Model):
@@ -62,8 +62,8 @@ class Message(models.Model):
         if new_messages.exists():
             new_messages.update(read=True)
 
-            group_name = get_group_name(request_user, other_user)
-            send_ws_message(group_name, 'all_messages_read')
+            group_name = get_chat_group_name(request_user, other_user)
+            send_ws_message(group_name, {'type': 'all_messages_read'})
 
         sorted_grouped_messages = sorted(grouped_messages.values(), key=lambda group: group['date'], reverse=True)
         return sorted_grouped_messages

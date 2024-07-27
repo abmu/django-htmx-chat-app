@@ -1,26 +1,27 @@
 {% extends 'chat/home.html' %}
 {% block subcontent %}
-    <h1>{{ recipient }}</h1>
-    <div id="chat-error"></div>
-    <div id="friendship-status">
-        {% if not are_friends %}
-            {% include 'chat/snippets/not_friends.html' %}
-        {% endif %}
-    </div>
+    <h1>{{ other_user }}</h1>
 
-    <div hx-ext="ws" ws-connect="/ws/chat/{{ recipient.username }}/">
+    <div hx-ext="ws" ws-connect="/ws/chat/{{ other_user.username }}/">
+        <div id="chat-error"></div>
+        <div id="friendship-status">
+            {% if not are_friends %}
+                {% include 'chat/snippets/not_friends_text.html' %}
+            {% endif %}
+        </div>
+
         <form id="form" ws-send>
             <input id="chat-input" name="content">
         </form>
-    </div>
 
-    <div id="messages">
-        {% for group in grouped_messages %}
-            <p>{{ group.date|date:'Y-m-d' }}</p>
-            {% for msg in group.messages %}
-                {% include 'chat/snippets/message.html' %}
+        <div id="messages">
+            {% for group in grouped_messages %}
+                <p>{{ group.date|date:'Y-m-d' }}</p>
+                {% for msg in group.messages %}
+                    {% include 'chat/snippets/message.html' %}
+                {% endfor %}
             {% endfor %}
-        {% endfor %}
+        </div>
     </div>
 
     <script>
@@ -83,7 +84,7 @@
 
         function displayChatErrorMessage() {
             const chatErrorElement = document.getElementById('chat-error');
-            chatErrorElement.innerHTML = '{% include "chat/snippets/chat_error.html" %}';
+            chatErrorElement.innerHTML = '{% include "chat/snippets/error_text.html" %}';
         }
 
         function handleFriendshipCreated() {
@@ -95,7 +96,7 @@
         function handleFriendshipRemoved() {
             areFriends = false;
             const friendshipStatusElement = document.getElementById('friendship-status');
-            friendshipStatusElement.innerHTML = '{% include "chat/snippets/not_friends.html" %}';
+            friendshipStatusElement.innerHTML = '{% include "chat/snippets/not_friends_text.html" %}';
         }
     </script>
 {% endblock subcontent %}

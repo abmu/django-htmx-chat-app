@@ -2,13 +2,14 @@
 {% block content %}
     <h1>Home</h1>
     <p>Signed in as: {{ user }}</p>
-    {% for chat in recent_chats %}
-        <ul>
-            <li><a href="{% url 'direct_message' chat.other_user %}">{{ chat.other_user }}</a> ({{ chat.unread_count }} new messages)</li>
-            <li>{{ chat.last_sender }}: {{ chat.last_content }}</li>
-            <li>{{ chat.last_timestamp }}</li>
-        </ul>
-    {% endfor %}
+
+    <div hx-ext="ws" ws-connect="/ws/notifications/">
+        <div id="recent-chats">
+            {% for chat in recent_chats %}
+                {% include 'chat/snippets/recent_chat.html' %}
+            {% endfor %}
+        </div>
+    </div>
     
     {% block subcontent %}
     {% endblock subcontent %}

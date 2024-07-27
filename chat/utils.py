@@ -4,7 +4,11 @@ from channels.layers import get_channel_layer
 channel_layer = get_channel_layer()
 
 
-def get_group_name(user_1, user_2):
+def get_notification_group_name(user):
+    return f'notification_{user.id}'
+
+
+def get_chat_group_name(user_1, user_2):
     id_1 = user_1.id
     id_2 = user_2.id
     if id_1 < id_2:
@@ -12,9 +16,7 @@ def get_group_name(user_1, user_2):
     return f'chat_{id_2}_{id_1}'
 
 
-def send_ws_message(group_name, message_type):
+def send_ws_message(group_name, event):
     async_to_sync(channel_layer.group_send)(
-        group_name, {
-            'type': message_type
-        }
+        group_name, event
     )
