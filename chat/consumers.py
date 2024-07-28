@@ -5,12 +5,12 @@ from django.template.loader import get_template
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from .models import Message
-from .utils import get_chat_group_name, get_notification_group_name
+from .utils import get_group_name
 
 User = get_user_model()
 
 
-class NotificationConsumer(WebsocketConsumer):
+class ChatConsumer(WebsocketConsumer):
     def connect(self):
         self.user = self.scope['user']
         if not self.user.is_authenticated:
@@ -18,30 +18,8 @@ class NotificationConsumer(WebsocketConsumer):
             self.close()
             return
         
-        self.group_name = get_notification_group_name(self.user)
-        async_to_sync(self.channel_layer.group_add)(
-            self.group_name, self.channel_name
-        ) 
-
-        self.accept()
-
-class ChatConsumer(WebsocketConsumer):
-    def connect(self):
-        self.user = self.scope['user']
-        if not self.user.is_authenticated:
-            self.accept()
-            self.close()
-            return
+        self.group_name = get_group_name(self.user)
         
-        other_user_username = self.scope['url_route']['kwargs']['username']
-        self.other_user = get_object_or_404(User, username=other_user_username)
-        if not self.other_user.is_active:
-            self.accept()
-            self.close()
-            return
-        self.are_friends = self.user.has_friend_mutual(self.other_user)
-
-        self.group_name = get_chat_group_name(self.user, self.other_user)
         async_to_sync(self.channel_layer.group_add)(
             self.group_name, self.channel_name
         )
@@ -49,70 +27,69 @@ class ChatConsumer(WebsocketConsumer):
         self.accept()
 
     def disconnect(self, close_code):
-        if hasattr(self, 'group_name'):
-            async_to_sync(self.channel_layer.group_discard)(
-                self.group_name, self.channel_name
-            )
+        if not hasattr(self, 'group_name'):
+            return
+        
+        async_to_sync(self.channel_layer.group_discard)(
+            self.group_name, self.channel_name
+        )
 
     def receive(self, text_data):
-        if not self.user.is_authenticated:
-            self.send(text_data=json.dumps({
-                'type': 'not_authenticated'
-            }))
-            self.close()
-            return
-        elif not self.are_friends:
-            return
+        # if not self.are_friends:
+        #     return
+        print(self.scope)
 
         json_data = json.loads(text_data)
-        content = json_data['content']
+        content = json_data['content'].strip()
         if not content or content.isspace():
             return
-        message = self.create_message(content.strip())
-
-        event = {
-            'type': 'chat_message',
-            'message': message,
-        }
+        
+        other_user = get_object_or_404(User, username='user3')
+        message = self.create_message(other_user, content)
 
         async_to_sync(self.channel_layer.group_send)(
-            self.group_name, event
+            get_group_name(message.recipient), {
+                'type': 'chat_message',
+                'message': message
+            }
         )
 
-    def create_message(self, content):
+        html = self.create_html_message(message)
+        self.send(text_data=html)
+
+    def create_message(self, other_user, content):
         return Message.objects.create(
             sender=self.user,
-            recipient=self.other_user,
+            recipient=other_user,
             content=content
         )
-
-    def chat_message(self, event):
-        message = event['message']
-        if self.user == message.recipient:
-            message.read = True
-            message.save()
-
-            async_to_sync(self.channel_layer.group_send)(
-                self.group_name, {
-                    'type': 'message_read',
-                    'message': message
-                }
-            )
-
-        html = get_template('chat/snippets/htmx_message.html').render(
+    
+    def create_html_message(self, message):
+        return get_template('chat/snippets/htmx_message.html').render(
             context={
                 'msg': message,
                 'user': self.user
             }
         )
 
+    def chat_message(self, event):
+        message = event['message']
+        if message.recipient == self.user:
+            message.read = True
+            message.save()
+
+            async_to_sync(self.channel_layer.group_send)(
+                get_group_name(message.sender), {
+                    'type': 'message_read',
+                    'message': message
+                }
+            )
+
+        html = self.create_html_message(message)
         self.send(text_data=html)
 
     def message_read(self, event):
         message = event['message']
-        if self.user != message.sender:
-            return
-
         self.send(text_data=json.dumps({
             'type': 'message_read',
             'messageId': f'{message.uuid}'
@@ -139,4 +116,3 @@ class ChatConsumer(WebsocketConsumer):
         self.send(text_data=json.dumps({
             'type': 'friend_account_deleted'
         }))
-        self.close()

@@ -5,7 +5,7 @@ from django.utils.functional import cached_property
 from uuid import uuid4
 from allauth.account.models import EmailAddress
 from chat.models import Message
-from chat.utils import get_chat_group_name, send_ws_message
+from chat.utils import get_group_name, send_ws_message
 
 
 class User(AbstractUser):
@@ -54,7 +54,7 @@ class User(AbstractUser):
         
         self.friends.add(friend)
         if self.has_friend_mutual(friend):
-            group_name = get_chat_group_name(self, friend)
+            group_name = get_group_name(friend)
             send_ws_message(group_name, {'type': 'friendship_created'})
     
     def remove_friend(self, friend):
@@ -65,7 +65,7 @@ class User(AbstractUser):
         self.friends.remove(friend)
         friend.friends.remove(self)
 
-        group_name = get_chat_group_name(self, friend)
+        group_name = get_group_name(friend)
         send_ws_message(group_name, {'type': 'friendship_removed'})
 
         return True, 'Friend successfully removed'
@@ -104,7 +104,7 @@ class User(AbstractUser):
         self.save()
         
         for friend in self.friends_mutual:
-            group_name = get_chat_group_name(self, friend)
+            group_name = get_group_name(friend)
             send_ws_message(group_name, {'type': 'friend_account_deleted'})
 
             self.friends.remove(friend)

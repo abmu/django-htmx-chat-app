@@ -2,34 +2,32 @@
 {% block subcontent %}
     <h1>{{ other_user }}</h1>
 
-    <div hx-ext="ws" ws-connect="/ws/chat/{{ other_user.username }}/">
-        <div id="chat-error"></div>
-        <div id="friendship-status">
-            {% if not are_friends %}
-                {% include 'chat/snippets/not_friends_text.html' %}
-            {% endif %}
-        </div>
+    <div id="chat-error"></div>
+    <div id="friendship-status">
+        {% if not are_friends %}
+            {% include 'chat/snippets/not_friends_text.html' %}
+        {% endif %}
+    </div>
 
-        <form id="form" ws-send>
-            <input id="chat-input" name="content">
-        </form>
-
-        <div id="messages">
-            {% for group in grouped_messages %}
-                <p>{{ group.date|date:'Y-m-d' }}</p>
-                {% for msg in group.messages %}
-                    {% include 'chat/snippets/message.html' %}
-                {% endfor %}
+    <form id="form" ws-send>
+        <input id="chat-input" name="content">
+    </form>
+    
+    <div id="messages">
+        {% for group in grouped_messages %}
+            <p>{{ group.date|date:'Y-m-d' }}</p>
+            {% for msg in group.messages %}
+                {% include 'chat/snippets/message.html' %}
             {% endfor %}
-        </div>
+        {% endfor %}
     </div>
 
     <script>
         let areFriends = '{{ are_friends }}' === 'True'; // Convert string to boolean value
-        
+
         document.body.addEventListener('htmx:wsBeforeSend', (e) => {
             const content = JSON.parse(e.detail.message).content;
-            // Cancel event and don't send message if the users don't have a mutual friendship, or the message is blank
+            // Cancel event and don't send message if the users don't have a mutual friendship, or if the message is blank
             if (!areFriends || !content.trim()) {
                 e.preventDefault();
             }
@@ -50,7 +48,7 @@
                     setMessageRead(data.messageId);
                 } else if (data.type === 'all_messages_read') {
                     setAllMessagesRead(user);
-                } else if (data.type === 'not_authenticated' || data.type === 'friend_account_deleted') {
+                } else if (data.type === 'friend_account_deleted') {
                     displayChatErrorMessage();
                 } else if (data.type === 'friendship_created') {
                     handleFriendshipCreated();
