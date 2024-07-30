@@ -24,6 +24,10 @@ class ChatConsumer(WebsocketConsumer):
             self.group_name, self.channel_name
         )
 
+        self.current_other_user = None
+        self.other_user_group_name = None
+        self.are_friends = None
+
         self.accept()
 
     def disconnect(self, close_code):
@@ -33,34 +37,54 @@ class ChatConsumer(WebsocketConsumer):
         async_to_sync(self.channel_layer.group_discard)(
             self.group_name, self.channel_name
         )
+        
+        if self.current_other_user is not None:
+            self.handle_chat_unload()
 
     def receive(self, text_data):
-        # if not self.are_friends:
-        #     return
-        print(self.scope)
-
         json_data = json.loads(text_data)
-        content = json_data['content'].strip()
+        message_type = json_data['type']
+        if message_type == 'chat_load':
+            other_user = json_data['other_user']
+            self.handle_chat_load(other_user)
+        elif message_type == 'chat_unload':
+            self.handle_chat_unload()
+        elif message_type == 'chat_send':
+            content = json_data['content']
+            self.handle_chat_send(content)
+
+    def handle_chat_load(self, username):
+        self.current_other_user = get_object_or_404(User, username=username)
+        self.other_user_group_name = get_group_name(self.current_other_user)
+        self.are_friends = self.user.has_friend_mutual(self.current_other_user)
+
+    def handle_chat_unload(self):
+        self.current_other_user = None
+        self.other_user_group_name = None
+        self.are_friends = None
+
+    def handle_chat_send(self, content):
+        if not self.are_friends:
+            return
+        
+        content = content.strip()
         if not content or content.isspace():
             return
         
-        other_user = get_object_or_404(User, username='user3')
-        message = self.create_message(other_user, content)
+        message = self.create_message(content)
 
-        async_to_sync(self.channel_layer.group_send)(
-            get_group_name(message.recipient), {
-                'type': 'chat_message',
-                'message': message
-            }
-        )
+        for group_name in [self.group_name, self.other_user_group_name]:
+            async_to_sync(self.channel_layer.group_send)(
+                group_name, {
+                    'type': 'chat_message',
+                    'message': message
+                }
+            )
 
-        html = self.create_html_message(message)
-        self.send(text_data=html)
-
-    def create_message(self, other_user, content):
+    def create_message(self, content):
         return Message.objects.create(
             sender=self.user,
-            recipient=other_user,
+            recipient=self.current_other_user,
             content=content
         )
     
@@ -74,21 +98,38 @@ class ChatConsumer(WebsocketConsumer):
 
     def chat_message(self, event):
         message = event['message']
+
+        # ONLY SHOW FIRST X CHARACTERS OF MESSAGE IF NOT ON THAT CHAT
+
         if message.recipient == self.user:
-            message.read = True
-            message.save()
+            if message.sender == self.current_other_user:
+                message.read = True
+                message.save()
 
-            async_to_sync(self.channel_layer.group_send)(
-                get_group_name(message.sender), {
-                    'type': 'message_read',
-                    'message': message
-                }
-            )
+                async_to_sync(self.channel_layer.group_send)(
+                    self.other_user_group_name, {
+                        'type': 'message_read',
+                        'message': message
+                    }
+                )
 
-        html = self.create_html_message(message)
-        self.send(text_data=html)
+                html = self.create_html_message(message)
+                self.send(text_data=html)
+            else:
+                self.send(text_data=json.dumps({
+                    'type': 'new_message'
+                }))
+        elif message.sender == self.user:
+            if message.recipient == self.current_other_user:
+                html = self.create_html_message(message)
+                self.send(text_data=html)
+            else:
+                self.send(text_data=json.dumps({
+                    'type': 'new_message'
+                }))
 
     def message_read(self, event):
+        print('read')
         message = event['message']
         self.send(text_data=json.dumps({
             'type': 'message_read',
@@ -99,6 +140,8 @@ class ChatConsumer(WebsocketConsumer):
         self.send(text_data=json.dumps({
             'type': 'all_messages_read'
         }))
+
+    # SEND THE USERNAME OF FRIEND WHO ADDED/REMOVED/DELETED
 
     def friendship_created(self, event):
         self.are_friends = True

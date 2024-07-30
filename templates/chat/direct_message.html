@@ -9,7 +9,11 @@
         {% endif %}
     </div>
 
-    <form id="form" ws-send>
+    <!-- BUG: load message is sent twice, so added 1ms delay as a workaround -->
+    <div id="test" ws-send hx-trigger="load delay:1ms" hx-vals='{"type":"chat_load", "other_user":"{{ other_user }}"}'></div>
+    <div id="test" ws-send hx-trigger="beforeunload from:window" hx-vals='{"type":"chat_unload"}'></div>
+
+    <form id="form" ws-send hx-vals='{"type":"chat_send"}'>
         <input id="chat-input" name="content">
     </form>
     
@@ -40,22 +44,21 @@
 
         document.body.addEventListener('htmx:wsAfterMessage', (e) => {
             const wsMessage = e.detail.message;
+
+            const handlers = {
+                'all_messages_read': () => setAllMessagesRead(),
+                'message_read': (data) => setMessageRead(data.messageId),
+                'friend_account_deleted': () => displayChatErrorMessage(),
+                'friendship_created': () => handleFriendshipCreated(),
+                'friendship_removed': () => handleFriendshipRemoved()
+            };
+
             try {
                 const data = JSON.parse(wsMessage);
-                const user = '{{ user.username }}';
-                
-                if (data.type === 'message_read') {
-                    setMessageRead(data.messageId);
-                } else if (data.type === 'all_messages_read') {
-                    setAllMessagesRead(user);
-                } else if (data.type === 'friend_account_deleted') {
-                    displayChatErrorMessage();
-                } else if (data.type === 'friendship_created') {
-                    handleFriendshipCreated();
-                } else if (data.type === 'friendship_removed') {
-                    handleFriendshipRemoved();
+                if (handlers[data.type] !== undefined) {
+                    handlers[data.type](data);
                 }
-            } catch (e) {
+            } catch (err) {
                 // If it's not JSON, assume it's a HTML for a chat message
                 // HTMX handles this automatically
                 return;
@@ -69,8 +72,8 @@
             }
         }
 
-        function setAllMessagesRead(user) {
-            const messageElements = document.querySelectorAll(`.message[data-sender="${user}"][data-read="false"]`);
+        function setAllMessagesRead() {
+            const messageElements = document.querySelectorAll(`.message[data-sender="{{ user.username }}"][data-read="false"]`);
             messageElements.forEach(updateMessageReadStatus);
         }
 
