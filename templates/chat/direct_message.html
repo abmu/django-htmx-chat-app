@@ -9,76 +9,67 @@
         {% endif %}
     </div>
 
-    <!-- BUG: load message is sent twice, so added 1ms delay as a workaround -->
-    <div id="test" ws-send hx-trigger="load delay:1ms" hx-vals='{"type":"chat_load", "other_user":"{{ other_user }}"}'></div>
-    <div id="test" ws-send hx-trigger="beforeunload from:window" hx-vals='{"type":"chat_unload"}'></div>
+    <!-- BUG: load ws message is sent twice, added 1ms delay as a workaround -->
+    <div ws-send hx-trigger="load delay:1ms" hx-vals='{"type":"chat_load", "other_user":"{{ other_user }}"}'></div>
+    <div ws-send hx-trigger="beforeunload from:window" hx-vals='{"type":"chat_unload"}'></div>
 
     <form id="form" ws-send hx-vals='{"type":"chat_send"}'>
         <input id="chat-input" name="content">
     </form>
-    
+
     <div id="messages">
         {% for group in grouped_messages %}
             <p>{{ group.date|date:'Y-m-d' }}</p>
-            {% for msg in group.messages %}
+            {% for message in group.messages %}
                 {% include 'chat/snippets/message.html' %}
             {% endfor %}
         {% endfor %}
     </div>
 
     <script>
-        let areFriends = '{{ are_friends }}' === 'True'; // Convert string to boolean value
 
-        document.body.addEventListener('htmx:wsBeforeSend', (e) => {
-            const content = JSON.parse(e.detail.message).content;
+
+
+
+        // UPDATE READ STATUS OF THE MESSAGE IN THE RECENT CHATS PART TO TRUE WHEN READ - ONLY SHOW READ STATUS IF YOU ARE THE ONE WHO SENT IT
+        // CLEAR NEW PART IN MESSAGES WHEN THE USER SENDS OR RECEIVES SOMETHING?
+
+
+
+
+        let areFriends = '{{ are_friends }}' === 'True'; // Convert string to boolean
+
+        document.body.addEventListener('htmx:wsConfigSend', (event) => {
+            const content = event.detail.parameters.content;
+            if (content === undefined) {
+                // The event was triggered by either chat load or unload 
+                return;
+            }
             // Cancel event and don't send message if the users don't have a mutual friendship, or if the message is blank
             if (!areFriends || !content.trim()) {
-                e.preventDefault();
+                event.preventDefault();
             }
         });
 
-        document.body.addEventListener('htmx:wsAfterSend', (e) => {
+        document.body.addEventListener('htmx:wsAfterSend', (event) => {
             const chatInputELement = document.getElementById('chat-input');
             chatInputELement.value = '';
         });
 
-        document.body.addEventListener('htmx:wsAfterMessage', (e) => {
-            const wsMessage = e.detail.message;
-
-            const handlers = {
-                'all_messages_read': () => setAllMessagesRead(),
-                'message_read': (data) => setMessageRead(data.messageId),
-                'friend_account_deleted': () => displayChatErrorMessage(),
-                'friendship_created': () => handleFriendshipCreated(),
-                'friendship_removed': () => handleFriendshipRemoved()
-            };
-
-            try {
-                const data = JSON.parse(wsMessage);
-                if (handlers[data.type] !== undefined) {
-                    handlers[data.type](data);
-                }
-            } catch (err) {
-                // If it's not JSON, assume it's a HTML for a chat message
-                // HTMX handles this automatically
-                return;
-            }
-        });
+        function setAllMessagesRead(reader) {
+            const messageElements = document.querySelectorAll(`.message[data-sender="{{ user.username }}"][data-read="False"]`);
+            messageElements.forEach(updateMessageReadStatus);
+        }
 
         function setMessageRead(messageId) {
             const messageElement = document.getElementById(`message-${messageId}`);
-            if (messageElement && messageElement.dataset.read === 'false') {
+            if (messageElement && messageElement.dataset.read === 'False') {
                 updateMessageReadStatus(messageElement);
             }
         }
 
-        function setAllMessagesRead() {
-            const messageElements = document.querySelectorAll(`.message[data-sender="{{ user.username }}"][data-read="false"]`);
-            messageElements.forEach(updateMessageReadStatus);
-        }
-
         function updateMessageReadStatus(messageElement) {
-            messageElement.dataset.read = 'true';
+            messageElement.dataset.read = 'True';
             const readStatusElement = messageElement.querySelector('.read-status');
             readStatusElement.textContent = 'Read: True';
         }
@@ -91,7 +82,7 @@
         function handleFriendshipCreated() {
             areFriends = true;
             const friendshipStatusElement = document.getElementById('friendship-status');
-            friendshipStatusElement.innerHTML = '';
+            friendshipStatusElement.textContent = '';
         }
 
         function handleFriendshipRemoved() {

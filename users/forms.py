@@ -1,3 +1,4 @@
+import re
 from django import forms
 from django.contrib.auth import authenticate
 from allauth.account.forms import SignupForm
@@ -8,11 +9,16 @@ class UserSignupForm(SignupForm):
     def clean_username(self):
         username = super().clean_username()
 
+        if not re.match(r'^[a-zA-Z0-9_]+$', username):
+            raise forms.ValidationError('Username can only contain letters, digits, and underscores')
+
         if User.has_deleted_user_prefix(username):
             raise forms.ValidationError(f'Username cannot start with \'{User.DELETED_USER_PREFIX}\'')
         
+        if User.is_placeholder_username(username):
+            raise forms.ValidationError(f'Username cannot be \'{User.PLACEHOLDER_USERNAME}\'')
+        
         return username
-
 
 class AddFriendForm(forms.Form):
     username = forms.CharField()

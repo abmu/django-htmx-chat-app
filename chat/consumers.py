@@ -25,7 +25,7 @@ class ChatConsumer(WebsocketConsumer):
         )
 
         self.current_other_user = None
-        self.other_user_group_name = None
+        self.current_other_user_group = None
         self.are_friends = None
 
         self.accept()
@@ -44,23 +44,23 @@ class ChatConsumer(WebsocketConsumer):
     def receive(self, text_data):
         json_data = json.loads(text_data)
         message_type = json_data['type']
-        if message_type == 'chat_load':
+        if message_type == 'chat_send':
+            content = json_data['content']
+            self.handle_chat_send(content)
+        elif message_type == 'chat_load':
             other_user = json_data['other_user']
             self.handle_chat_load(other_user)
         elif message_type == 'chat_unload':
             self.handle_chat_unload()
-        elif message_type == 'chat_send':
-            content = json_data['content']
-            self.handle_chat_send(content)
-
+        
     def handle_chat_load(self, username):
         self.current_other_user = get_object_or_404(User, username=username)
-        self.other_user_group_name = get_group_name(self.current_other_user)
+        self.current_other_user_group = get_group_name(self.current_other_user)
         self.are_friends = self.user.has_friend_mutual(self.current_other_user)
 
     def handle_chat_unload(self):
         self.current_other_user = None
-        self.other_user_group_name = None
+        self.current_other_user_group = None
         self.are_friends = None
 
     def handle_chat_send(self, content):
@@ -73,7 +73,7 @@ class ChatConsumer(WebsocketConsumer):
         
         message = self.create_message(content)
 
-        for group_name in [self.group_name, self.other_user_group_name]:
+        for group_name in [self.group_name, self.current_other_user_group]:
             async_to_sync(self.channel_layer.group_send)(
                 group_name, {
                     'type': 'chat_message',
@@ -88,48 +88,65 @@ class ChatConsumer(WebsocketConsumer):
             content=content
         )
     
-    def create_html_message(self, message):
+    def create_message_html(self, message):
+        serialized_message = message.serialize()
         return get_template('chat/snippets/htmx_message.html').render(
             context={
-                'msg': message,
+                'message': serialized_message,
+                'user': self.user
+            }
+        )
+    
+    def create_recent_chat_html(self, message):
+        other_user = message.other_user(self.user)
+        serialized_message = message.serialize(limit_content=True)
+
+        return get_template('chat/snippets/htmx_recent_chat.html').render(
+            context={
+                'other_user': other_user,
+                'last_message': serialized_message,
                 'user': self.user
             }
         )
 
     def chat_message(self, event):
         message = event['message']
+        recent_chat_html = self.create_recent_chat_html(message)
+        self.send(text_data=recent_chat_html)
 
-        # ONLY SHOW FIRST X CHARACTERS OF MESSAGE IF NOT ON THAT CHAT
+        is_current_chat_message = (message.sender == self.current_other_user and message.recipient == self.user or 
+                                   message.sender == self.user and message.recipient == self.current_other_user)
+        if not is_current_chat_message:
+            return
 
-        if message.recipient == self.user:
-            if message.sender == self.current_other_user:
-                message.read = True
-                message.save()
+        is_recipient = message.recipient == self.user
+        if is_recipient:
+            self.mark_message_as_read(message)
+            message.read = True
 
+        message_html = self.create_message_html(message)
+        self.send(text_data=message_html)
+
+    def mark_message_as_read(self, message):
+        # Update the 'read' status of the message in the database and notify the sender and recipient, only if the database hasn't already been updated
+        newly_updated = Message.objects.filter(uuid=message.uuid, read=False).update(read=True)
+
+        if newly_updated > 0:
+            for group_name in [self.group_name, self.current_other_user_group]:
                 async_to_sync(self.channel_layer.group_send)(
-                    self.other_user_group_name, {
+                    group_name, {
                         'type': 'message_read',
                         'message': message
                     }
                 )
 
-                html = self.create_html_message(message)
-                self.send(text_data=html)
-            else:
-                self.send(text_data=json.dumps({
-                    'type': 'new_message'
-                }))
-        elif message.sender == self.user:
-            if message.recipient == self.current_other_user:
-                html = self.create_html_message(message)
-                self.send(text_data=html)
-            else:
-                self.send(text_data=json.dumps({
-                    'type': 'new_message'
-                }))
+
+    
+    # CHECK IF THE MESSAGE IS ON THE USER'S CURRENT PAGE INSTEAD OF ANOTHER CHAT PAGE
+
+
 
     def message_read(self, event):
-        print('read')
         message = event['message']
         self.send(text_data=json.dumps({
             'type': 'message_read',
@@ -141,7 +158,12 @@ class ChatConsumer(WebsocketConsumer):
             'type': 'all_messages_read'
         }))
 
-    # SEND THE USERNAME OF FRIEND WHO ADDED/REMOVED/DELETED
+
+
+    # SEND AND CHECK IF THE USERNAME OF FRIEND WHO ADDED/REMOVED/DELETED IS CURRENT
+    # SHOW DELETED ACCOUNT IN CHAT LIST
+
+
 
     def friendship_created(self, event):
         self.are_friends = True

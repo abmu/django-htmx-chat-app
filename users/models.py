@@ -10,7 +10,9 @@ from chat.utils import get_group_name, send_ws_message
 
 class User(AbstractUser):
     DELETED_USER_PREFIX = 'deleted_user_'
+    PLACEHOLDER_USERNAME = 'temp'
 
+    username = models.CharField(max_length=150, unique=True)
     uuid = models.UUIDField(default=uuid4, editable=False, unique=True)
     friends = models.ManyToManyField('self', blank=True, symmetrical=False)
 
@@ -112,11 +114,11 @@ class User(AbstractUser):
 
         self.remove_redundant_users()
 
-    @staticmethod
-    def remove_redundant_users():
+    @classmethod
+    def remove_redundant_users(cls):
         '''Remove all users from the database who have deleted their account and have no messages'''
         Message.remove_redundant_messages()
-        deleted_users = User.objects.filter(is_active=False)
+        deleted_users = cls.objects.filter(is_active=False)
         for user in deleted_users:
             if not Message.objects.filter(
                 models.Q(sender=user) |
@@ -124,7 +126,12 @@ class User(AbstractUser):
             ).exists():
                 user.delete()
 
-    @staticmethod
-    def has_deleted_user_prefix(username):
+    @classmethod
+    def has_deleted_user_prefix(cls, username):
         '''Check if a username starts with the prefix used for deleted users' usernames'''
-        return username.startswith(User.DELETED_USER_PREFIX)
+        return username.lower().startswith(cls.DELETED_USER_PREFIX)
+    
+    @classmethod
+    def is_placeholder_username(cls, username):
+        '''Check if the given username matches the reserved placeholder username'''
+        return username.lower() == cls.PLACEHOLDER_USERNAME

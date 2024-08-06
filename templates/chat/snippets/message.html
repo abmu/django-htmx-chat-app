@@ -1,13 +1,13 @@
-<div id="message-{{ msg.uuid }}" class="message" data-sender="{{ msg.sender }}" data-read="{{ msg.read|lower }}">
+<div id="message-{{ message.uuid }}" class="message" data-sender="{{ message.sender }}" data-read="{{ message.read }}">
     <ul>
-        <li>From: {{ msg.sender }}</li>
-        <li>To: {{ msg.recipient }}</li>
-        <li style="white-space: pre-wrap;">{{ msg.content }}</li>
-        <li>{{ msg.timestamp }}</li>
-        {% if msg.sender == user %}
-            <li class="read-status">Read: {{ msg.read }}</li>
+        <li>From: {{ message.sender }}</li>
+        <li>To: {{ message.recipient }}</li>
+        <li style="white-space: pre-wrap;">{{ message.content }}</li>
+        <li>{{ message.timestamp }}</li>
+        {% if message.sender == user.username %}
+            <li class="read-status">Read: {{ message.read }}</li>
         {% else %}
-            {% if msg.read == False %}
+            {% if message.read == 'False' %}
                 <li>New</li>
             {% endif %}
         {% endif %}

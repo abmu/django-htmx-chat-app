@@ -1,7 +1,10 @@
-<div id="chat-{{ chat.other_user }}">
+<div id="chat-{{ other_user }}" data-last-sender="{{ last_message.sender }}">
     <ul>
-        <li><a href="{% url 'direct_message' chat.other_user %}">{{ chat.other_user }}</a> ({{ chat.unread_count }} new messages)</li>
-        <li>{{ chat.last_sender }}: {{ chat.last_content }}</li>
-        <li>{{ chat.last_timestamp }}</li>
+        <li><a href="{% url 'direct_message' other_user %}"><span>{{ other_user }}</span></a> (<span class="unread-count">{{ unread_count }}</span> new messages)</li>
+        <li>{{ last_message.sender }}: <span style="white-space: pre-wrap;">{{ last_message.content }}</span></li>
+        <li>{{ last_message.timestamp }}</li>
+        {% if last_message.sender == user.username %}
+            <li class="read-status">Read: {{ last_message.read }}</li>
+        {% endif %}
     </ul>
 </div>

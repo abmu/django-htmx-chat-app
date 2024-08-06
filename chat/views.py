@@ -17,13 +17,12 @@ def home(request):
 
 
 @login_required
-def direct_message(request, username):
-    recent_chats = Message.get_recent_chats(request.user)
-    
+def direct_message(request, username):    
     sender = request.user
     other_user = get_object_or_404(User, username__iexact=username)
     are_friends = sender.has_friend_mutual(other_user)
     grouped_messages = Message.get_grouped_messages(sender, other_user)
+    recent_chats = Message.get_recent_chats(request.user)
     
     return render(request, 'chat/direct_message.html', {
         'title': 'Direct message',
