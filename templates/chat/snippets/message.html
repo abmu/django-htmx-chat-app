@@ -1,4 +1,4 @@
-<div id="message-{{ message.uuid }}" class="message" data-sender="{{ message.sender }}" data-read="{{ message.read }}">
+<div id="message-{{ message.uuid }}" class="message" data-sender="{{ message.sender }}" data-recipient="{{ message.recipient }}" data-read="{{ message.read }}">
     <ul>
         <li>From: {{ message.sender }}</li>
         <li>To: {{ message.recipient }}</li>
@@ -8,7 +8,7 @@
             <li class="read-status">Read: {{ message.read }}</li>
         {% else %}
             {% if message.read == 'False' %}
-                <li>New</li>
+                <li class="new">New</li>
             {% endif %}
         {% endif %}
     </ul>

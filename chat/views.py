@@ -17,17 +17,17 @@ def home(request):
 
 
 @login_required
-def direct_message(request, username):    
+def direct_message(request, username):
     sender = request.user
-    other_user = get_object_or_404(User, username__iexact=username)
-    are_friends = sender.has_friend_mutual(other_user)
-    grouped_messages = Message.get_grouped_messages(sender, other_user)
+    current_other_user = get_object_or_404(User, username__iexact=username)
+    are_friends = sender.has_friend_mutual(current_other_user)
+    grouped_messages = Message.get_grouped_messages(sender, current_other_user)
     recent_chats = Message.get_recent_chats(request.user)
     
     return render(request, 'chat/direct_message.html', {
         'title': 'Direct message',
         'recent_chats': recent_chats,
-        'other_user': other_user,
+        'current_other_user': current_other_user,
         'are_friends': are_friends,
         'grouped_messages': grouped_messages
     })

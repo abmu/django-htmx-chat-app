@@ -1,6 +1,6 @@
 {% extends 'chat/home.html' %}
 {% block subcontent %}
-    <h1>{{ other_user }}</h1>
+    <h1>{{ current_other_user }}</h1>
 
     <div id="chat-error"></div>
     <div id="friendship-status">
@@ -10,7 +10,7 @@
     </div>
 
     <!-- BUG: load ws message is sent twice, added 1ms delay as a workaround -->
-    <div ws-send hx-trigger="load delay:1ms" hx-vals='{"type":"chat_load", "other_user":"{{ other_user }}"}'></div>
+    <div ws-send hx-trigger="load delay:1ms" hx-vals='{"type":"chat_load", "current_other_user":"{{ current_other_user }}"}'></div>
     <div ws-send hx-trigger="beforeunload from:window" hx-vals='{"type":"chat_unload"}'></div>
 
     <form id="form" ws-send hx-vals='{"type":"chat_send"}'>
@@ -31,7 +31,6 @@
 
 
 
-        // UPDATE READ STATUS OF THE MESSAGE IN THE RECENT CHATS PART TO TRUE WHEN READ - ONLY SHOW READ STATUS IF YOU ARE THE ONE WHO SENT IT
         // CLEAR NEW PART IN MESSAGES WHEN THE USER SENDS OR RECEIVES SOMETHING?
 
 
@@ -55,24 +54,6 @@
             const chatInputELement = document.getElementById('chat-input');
             chatInputELement.value = '';
         });
-
-        function setAllMessagesRead(reader) {
-            const messageElements = document.querySelectorAll(`.message[data-sender="{{ user.username }}"][data-read="False"]`);
-            messageElements.forEach(updateMessageReadStatus);
-        }
-
-        function setMessageRead(messageId) {
-            const messageElement = document.getElementById(`message-${messageId}`);
-            if (messageElement && messageElement.dataset.read === 'False') {
-                updateMessageReadStatus(messageElement);
-            }
-        }
-
-        function updateMessageReadStatus(messageElement) {
-            messageElement.dataset.read = 'True';
-            const readStatusElement = messageElement.querySelector('.read-status');
-            readStatusElement.textContent = 'Read: True';
-        }
 
         function displayChatErrorMessage() {
             const chatErrorElement = document.getElementById('chat-error');

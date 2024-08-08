@@ -69,12 +69,19 @@ class Message(models.Model):
 
         new_messages = messages.filter(read=False, sender=other_user)
         if new_messages.exists():
+            unread_count = new_messages.count()
             new_messages.update(read=True)
 
             for user in [request_user, other_user]:
                 group_name = get_group_name(user)
-                event = {'type': 'all_messages_read'}
-                send_ws_message(group_name, event)
+                send_ws_message(
+                    group_name, {
+                        'type': 'all_messages_read',
+                        'sender': other_user,
+                        'recipient': request_user,
+                        'unread_count': unread_count
+                    }
+                )
 
         sorted_grouped_messages = sorted(grouped_messages.values(), key=lambda group: group['date'], reverse=True)
         return sorted_grouped_messages

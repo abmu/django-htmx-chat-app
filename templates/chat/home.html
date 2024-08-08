@@ -12,4 +12,60 @@
     
     {% block subcontent %}
     {% endblock subcontent %}
+
+    <script>
+        function setAllMessagesRead(chat, otherUser) {
+            if (chat.recipient === '{{ user }}') {
+                // Update unread count if the user read the message but is not on the relevant chat (ie. they read message on another tab)
+                // The unread count would have already been updated if the user was on the relevant chat
+                if (!isCurrentChat(otherUser)) {
+                    decrementUnreadCount(otherUser, chat.unread);
+                }
+            } else {
+                updateRecentChatReadStatus(otherUser);
+                if (isCurrentChat(otherUser)) {
+                    const messageElements = document.querySelectorAll(`.message[data-sender="${chat.sender}"][data-read="False"]`);
+                    messageElements.forEach(updateMessageReadStatus);
+                }
+            }
+        }
+
+        function setMessageRead(message, otherUser) {
+            if (message.recipient === '{{ user }}') {
+                if (!isCurrentChat(otherUser)) {
+                    decrementUnreadCount(otherUser, 1);
+                }
+            } else {
+                updateRecentChatReadStatus(otherUser);
+                if (isCurrentChat(otherUser)) {
+                    const messageElement = document.getElementById(`message-${message.uuid}`);
+                    if (messageElement && messageElement.dataset.read === 'False') {
+                        updateMessageReadStatus(messageElement);
+                    }
+                }
+            }
+        }
+
+        function updateMessageReadStatus(messageElement) {
+            messageElement.dataset.read = 'True';
+            updateReadStatus(messageElement);
+        }
+
+        function updateRecentChatReadStatus(otherUser) {
+            const recentChatElement = document.getElementById(`chat-${otherUser}`);
+            updateReadStatus(recentChatElement);
+        }
+
+        function updateReadStatus(element) {
+            const readStatusElement = element.querySelector('.read-status');
+            readStatusElement.textContent = 'Read: True';
+        }
+
+        function decrementUnreadCount(otherUser, count) {
+            const recentChatElement = document.getElementById(`chat-${otherUser}`);
+            const unreadCountElement = recentChatElement.querySelector('.unread-count');
+            const oldUnreadCount = parseInt(unreadCountElement.textContent);
+            unreadCountElement.innerHTML = Math.max(0, oldUnreadCount - count);
+        }
+    </script>
 {% endblock content %}

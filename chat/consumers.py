@@ -48,8 +48,8 @@ class ChatConsumer(WebsocketConsumer):
             content = json_data['content']
             self.handle_chat_send(content)
         elif message_type == 'chat_load':
-            other_user = json_data['other_user']
-            self.handle_chat_load(other_user)
+            current_other_user = json_data['current_other_user']
+            self.handle_chat_load(current_other_user)
         elif message_type == 'chat_unload':
             self.handle_chat_unload()
         
@@ -97,10 +97,8 @@ class ChatConsumer(WebsocketConsumer):
             }
         )
     
-    def create_recent_chat_html(self, message):
-        other_user = message.other_user(self.user)
+    def create_recent_chat_html(self, other_user, message):
         serialized_message = message.serialize(limit_content=True)
-
         return get_template('chat/snippets/htmx_recent_chat.html').render(
             context={
                 'other_user': other_user,
@@ -111,11 +109,12 @@ class ChatConsumer(WebsocketConsumer):
 
     def chat_message(self, event):
         message = event['message']
-        recent_chat_html = self.create_recent_chat_html(message)
+        other_user = message.other_user(self.user)
+
+        recent_chat_html = self.create_recent_chat_html(other_user, message)
         self.send(text_data=recent_chat_html)
 
-        is_current_chat_message = (message.sender == self.current_other_user and message.recipient == self.user or 
-                                   message.sender == self.user and message.recipient == self.current_other_user)
+        is_current_chat_message = other_user == self.current_other_user
         if not is_current_chat_message:
             return
 
@@ -140,28 +139,40 @@ class ChatConsumer(WebsocketConsumer):
                     }
                 )
 
-
-    
-    # CHECK IF THE MESSAGE IS ON THE USER'S CURRENT PAGE INSTEAD OF ANOTHER CHAT PAGE
-
-
-
     def message_read(self, event):
         message = event['message']
+        other_user = message.other_user(self.user)
+
         self.send(text_data=json.dumps({
             'type': 'message_read',
-            'messageId': f'{message.uuid}'
+            'message': message.serialize(),
+            'otherUser': other_user.username
         }))
 
     def all_messages_read(self, event):
+        sender = event['sender']
+        recipient = event['recipient']
+        unread_count = event['unread_count']
+        other_user = recipient if sender == self.user else sender
+
         self.send(text_data=json.dumps({
-            'type': 'all_messages_read'
+            'type': 'all_messages_read',
+            'chat': {
+                'sender': sender.username,
+                'recipient': recipient.username,
+                'unread': unread_count
+            },
+            'otherUser': other_user.username
         }))
+
+
 
 
 
     # SEND AND CHECK IF THE USERNAME OF FRIEND WHO ADDED/REMOVED/DELETED IS CURRENT
     # SHOW DELETED ACCOUNT IN CHAT LIST
+
+
 
 
 
