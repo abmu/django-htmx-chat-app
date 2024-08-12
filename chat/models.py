@@ -32,16 +32,18 @@ class Message(models.Model):
     def __str__(self):
         return self.content
     
+    def get_date(self):
+        return self.timestamp.strftime("%Y-%m-%d")
+    
     def serialize(self, limit_content=False):
         visible_characters = 10
         content = self.content[:visible_characters] + '...' if limit_content and len(self.content) > visible_characters else self.content
-        timestamp = self.timestamp.strftime("%Y-%m-%d %H:%M")
         return {
             'uuid': str(self.uuid),
             'sender': self.sender.username,
             'recipient': self.recipient.username,
             'content': content,
-            'timestamp': timestamp,
+            'timestamp': self.timestamp.isoformat(),
             'read': str(self.read)
         }
     
@@ -49,23 +51,16 @@ class Message(models.Model):
         return self.recipient if self.sender == user else self.sender
     
     @classmethod
-    def get_grouped_messages(cls, request_user, other_user):
-        '''Returns the messages sent directly between two users, grouped by date sent'''
+    def get_messages(cls, request_user, other_user):
+        '''Returns the messages sent directly between two users'''
         messages = cls.objects.filter(
             models.Q(sender=request_user, recipient=other_user) |
             models.Q(sender=other_user, recipient=request_user)
         ).order_by('-timestamp')
 
-        grouped_messages = {}
+        messages_list = []
         for message in messages:
-            date = message.timestamp.date()
-            if date not in grouped_messages:
-                grouped_messages[date] = {
-                    'date': date,
-                    'messages': []
-                }
-            
-            grouped_messages[date]['messages'].append(message.serialize())
+            messages_list.append(message.serialize())
 
         new_messages = messages.filter(read=False, sender=other_user)
         if new_messages.exists():
@@ -83,8 +78,7 @@ class Message(models.Model):
                     }
                 )
 
-        sorted_grouped_messages = sorted(grouped_messages.values(), key=lambda group: group['date'], reverse=True)
-        return sorted_grouped_messages
+        return messages_list
     
     @classmethod
     def get_recent_chats(cls, user):

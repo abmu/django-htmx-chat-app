@@ -90,7 +90,7 @@ class ChatConsumer(WebsocketConsumer):
     
     def create_message_html(self, message):
         serialized_message = message.serialize()
-        return get_template('chat/snippets/htmx_message.html').render(
+        return get_template('chat/snippets/message.html').render(
             context={
                 'message': serialized_message,
                 'user': self.user
@@ -99,7 +99,7 @@ class ChatConsumer(WebsocketConsumer):
     
     def create_recent_chat_html(self, other_user, message):
         serialized_message = message.serialize(limit_content=True)
-        return get_template('chat/snippets/htmx_recent_chat.html').render(
+        return get_template('chat/snippets/recent_chat.html').render(
             context={
                 'other_user': other_user,
                 'last_message': serialized_message,

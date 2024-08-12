@@ -10,7 +10,6 @@ from chat.utils import get_group_name, send_ws_message
 
 class User(AbstractUser):
     DELETED_USER_PREFIX = 'deleted_user_'
-    PLACEHOLDER_USERNAME = 'temp'
 
     username = models.CharField(max_length=150, unique=True)
     uuid = models.UUIDField(default=uuid4, editable=False, unique=True)
@@ -130,8 +129,3 @@ class User(AbstractUser):
     def has_deleted_user_prefix(cls, username):
         '''Check if a username starts with the prefix used for deleted users' usernames'''
         return username.lower().startswith(cls.DELETED_USER_PREFIX)
-    
-    @classmethod
-    def is_placeholder_username(cls, username):
-        '''Check if the given username matches the reserved placeholder username'''
-        return username.lower() == cls.PLACEHOLDER_USERNAME

@@ -21,7 +21,7 @@ def direct_message(request, username):
     sender = request.user
     current_other_user = get_object_or_404(User, username__iexact=username)
     are_friends = sender.has_friend_mutual(current_other_user)
-    grouped_messages = Message.get_grouped_messages(sender, current_other_user)
+    messages = Message.get_messages(sender, current_other_user)
     recent_chats = Message.get_recent_chats(request.user)
     
     return render(request, 'chat/direct_message.html', {
@@ -29,5 +29,5 @@ def direct_message(request, username):
         'recent_chats': recent_chats,
         'current_other_user': current_other_user,
         'are_friends': are_friends,
-        'grouped_messages': grouped_messages
+        'all_messages': messages
     })

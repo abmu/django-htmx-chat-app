@@ -15,9 +15,6 @@ class UserSignupForm(SignupForm):
         if User.has_deleted_user_prefix(username):
             raise forms.ValidationError(f'Username cannot start with \'{User.DELETED_USER_PREFIX}\'')
         
-        if User.is_placeholder_username(username):
-            raise forms.ValidationError(f'Username cannot be \'{User.PLACEHOLDER_USERNAME}\'')
-        
         return username
 
 class AddFriendForm(forms.Form):

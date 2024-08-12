@@ -42,23 +42,24 @@
                 handleJsonMessage(jsonData);
             } catch (err) {
                 // If parsing fails, assume the websocket message is a HTML string
-                handleHtmlMessage(wsMessage);
+                const htmlElement = htmlToElement(wsMessage);
+                handleHtmlMessage(htmlElement);
             }
             // Cancel event to prevent any further unnecessary processing by HTMX
             event.preventDefault();
         });
 
-        function handleJsonMessage(jsonData) {
-            const handlers = {
-                'all_messages_read': (data) => setAllMessagesRead(data.chat, data.otherUser),
-                'message_read': (data) => setMessageRead(data.message, data.otherUser),
-                'friend_account_deleted': () => displayChatErrorMessage(),
-                'friendship_created': () => handleFriendshipCreated(),
-                'friendship_removed': () => handleFriendshipRemoved()
-            };
+        const jsonMessageHandlers = {
+            'all_messages_read': (jsonData) => setAllMessagesRead(jsonData.chat, jsonData.otherUser),
+            'message_read': (jsonData) => setMessageRead(jsonData.message, jsonData.otherUser),
+            'friend_account_deleted': () => displayChatErrorMessage(),
+            'friendship_created': () => handleFriendshipCreated(),
+            'friendship_removed': () => handleFriendshipRemoved()
+        };
 
-            if (handlers[jsonData.type] !== undefined) {
-                handlers[jsonData.type](jsonData);
+        function handleJsonMessage(jsonData) {
+            if (jsonMessageHandlers[jsonData.type] !== undefined) {
+                jsonMessageHandlers[jsonData.type](jsonData);
             }
         }
 
@@ -74,46 +75,62 @@
             return result;
         }
 
-        function handleHtmlMessage(html) {
-            const htmlElement = htmlToElement(html);
-            const swapElement = htmlElement.children[0];
-            const swapId = htmlElement.id;
-            const swapOob = htmlElement.getAttribute('hx-swap-oob');
-            
+        const htmlMessageHandlers = {
+            'recent-chat': (htmlElement) => updateRecentChats(htmlElement),
+            'message': (htmlElement) => updateMessages(htmlElement)
+        };
 
-
-
-
-            // MOVE INTO SEPERATE FUNCTIONS
-
-
-
-
-
-            if (swapId === 'recent-chats') {
-                const oldChatElement = document.getElementById(swapElement.id);
-                if (oldChatElement) {
-                    oldChatElement.remove();
-                }
-                let unreadCount = 0;
-                const lastSender = swapElement.dataset.lastSender;
-                if (lastSender !== '{{ user }}' && !isCurrentChat(lastSender)) {
-                    if (oldChatElement) {
-                        unreadCount = parseInt(oldChatElement.querySelector('.unread-count').textContent) + 1;
-                    } else {
-                        unreadCount = 1;
-                    }
-                }
-                swapElement.querySelector('.unread-count').textContent = unreadCount;
-            } else if (swapId === 'messages') {
-                // No extra processing needs to be done
+        function handleHtmlMessage(htmlElement) {
+            const className = htmlElement.className;
+            if (htmlMessageHandlers[className] !== undefined) {
+                htmlMessageHandlers[className](htmlElement);
             }
-
-            document.getElementById(swapId).insertAdjacentElement(swapOob, swapElement);
         }
 
         function isCurrentChat(otherUser) {
             return '{{ current_other_user }}' && (otherUser === '{{ current_other_user }}')
+        }
+
+        function updateRecentChats(newRecentChatElement) {
+            insertLocalTimestamp(newRecentChatElement);
+
+            const oldRecentChatElement = document.getElementById(newRecentChatElement.id);
+            if (oldRecentChatElement) {
+                oldRecentChatElement.remove();
+            }
+
+            let unreadCount = 0;
+            const lastSender = newRecentChatElement.dataset.lastSender;
+            if (lastSender !== '{{ user }}' && !isCurrentChat(lastSender)) {
+                if (oldRecentChatElement) {
+                    unreadCount = parseInt(oldRecentChatElement.querySelector('.unread-count').textContent) + 1;
+                } else {
+                    unreadCount = 1;
+                }
+            }
+            newRecentChatElement.querySelector('.unread-count').textContent = unreadCount;
+
+            document.getElementById('recent-chats').insertAdjacentElement('afterbegin', newRecentChatElement);
+        }
+
+        function updateMessages(newMessageElement) {
+            insertLocalTimestamp(newMessageElement);
+
+            const messagesContainer = document.getElementById('messages');
+
+            const date = newMessageElement.dataset.date;
+            const dateTextElement = document.getElementById(`date-${date}`);
+            if (dateTextElement === null) {
+                const dateTextHtml = getDateTextHtml(date);
+                messagesContainer.insertAdjacentHTML('beforeend', dateTextHtml);
+            }
+
+            messagesContainer.insertAdjacentElement('beforeend', newMessageElement);
+
+            if (isNewMessagesText === true) {
+                clearNewMessagesText();
+                isNewMessagesText = false;
+            }
         }
     </script>
 </body>

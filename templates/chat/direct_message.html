@@ -18,25 +18,53 @@
     </form>
 
     <div id="messages">
-        {% for group in grouped_messages %}
-            <p>{{ group.date|date:'Y-m-d' }}</p>
-            {% for message in group.messages %}
-                {% include 'chat/snippets/message.html' %}
-            {% endfor %}
+        {% for message in all_messages reversed %}
+            {% include 'chat/snippets/message.html' %}
         {% endfor %}
     </div>
 
     <script>
-
-
-
-
-        // CLEAR NEW PART IN MESSAGES WHEN THE USER SENDS OR RECEIVES SOMETHING?
-
-
-
-
         let areFriends = '{{ are_friends }}' === 'True'; // Convert string to boolean
+        
+        let isNewMessagesText = false;
+
+        function getDateTextHtml(date) {
+            return `{% include 'chat/snippets/date_text.html' with date='TEMP' %}`.replaceAll('TEMP', date);
+        }
+
+        function getNewMessagesTextHtml() {
+            return `{% include 'chat/snippets/new_messages_text.html' %}`
+        }
+
+        function clearNewMessagesText() {
+            const newMessagesTextElement = document.getElementById('new-messages');
+            newMessagesTextElement.remove();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            let previousDate = null;
+
+            const messageElements = document.querySelectorAll('.message');
+            messageElements.forEach(messageElement => {
+                insertLocalTimestamp(messageElement);
+                const currentDate = messageElement.dataset.date;
+                if (currentDate !== previousDate) {
+                    const dateTextHtml = getDateTextHtml(currentDate);
+                    messageElement.insertAdjacentHTML('beforebegin', dateTextHtml);
+                    previousDate = currentDate;
+                }
+
+                const isNew = messageElement.dataset.recipient === '{{ user }}' && messageElement.dataset.read === 'False';
+                if (isNew === true) {
+                    messageElement.dataset.read = 'True';
+                    if (isNewMessagesText === false) {
+                        const newMessagesTextHtml = getNewMessagesTextHtml();
+                        messageElement.insertAdjacentHTML('beforebegin', newMessagesTextHtml);
+                        isNewMessagesText = true;
+                    }
+                }
+            });
+        });
 
         document.body.addEventListener('htmx:wsConfigSend', (event) => {
             const content = event.detail.parameters.content;
@@ -57,7 +85,7 @@
 
         function displayChatErrorMessage() {
             const chatErrorElement = document.getElementById('chat-error');
-            chatErrorElement.innerHTML = '{% include "chat/snippets/error_text.html" %}';
+            chatErrorElement.innerHTML = `{% include 'chat/snippets/error_text.html' %}`;
         }
 
         function handleFriendshipCreated() {
@@ -69,7 +97,7 @@
         function handleFriendshipRemoved() {
             areFriends = false;
             const friendshipStatusElement = document.getElementById('friendship-status');
-            friendshipStatusElement.innerHTML = '{% include "chat/snippets/not_friends_text.html" %}';
+            friendshipStatusElement.innerHTML = `{% include 'chat/snippets/not_friends_text.html' %}`;
         }
     </script>
 {% endblock subcontent %}

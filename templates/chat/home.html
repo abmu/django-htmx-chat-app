@@ -14,6 +14,33 @@
     {% endblock subcontent %}
 
     <script>
+        const dateFormatter = new Intl.DateTimeFormat(undefined, {
+            dateStyle: 'short'
+        });
+
+        const timeFormatter = new Intl.DateTimeFormat(undefined, {
+            timeStyle: 'short'
+        });
+
+        function getLocalTimestamp(utcTimestampString) {
+            return new Date(utcTimestampString);
+        }
+
+        function getDate(timestamp) {
+            return dateFormatter.format(timestamp);
+        }
+
+        function getTime(timestamp) {
+            return timeFormatter.format(timestamp);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const recentChatElements = document.querySelectorAll('.recent-chat');
+            recentChatElements.forEach(recentChat => {
+                insertLocalTimestamp(recentChat);
+            });
+        });
+
         function setAllMessagesRead(chat, otherUser) {
             if (chat.recipient === '{{ user }}') {
                 // Update unread count if the user read the message but is not on the relevant chat (ie. they read message on another tab)
@@ -58,14 +85,33 @@
 
         function updateReadStatus(element) {
             const readStatusElement = element.querySelector('.read-status');
-            readStatusElement.textContent = 'Read: True';
+            readStatusElement.textContent = 'True';
         }
 
         function decrementUnreadCount(otherUser, count) {
             const recentChatElement = document.getElementById(`chat-${otherUser}`);
             const unreadCountElement = recentChatElement.querySelector('.unread-count');
             const oldUnreadCount = parseInt(unreadCountElement.textContent);
-            unreadCountElement.innerHTML = Math.max(0, oldUnreadCount - count);
+            unreadCountElement.textContent = Math.max(0, oldUnreadCount - count);
+        }
+
+        function insertLocalTimestamp(element) {
+            const utcTimestamp = element.dataset.utcTimestamp;
+            const localTimestamp = getLocalTimestamp(utcTimestamp);
+            const time = getTime(localTimestamp);
+            const date = getDate(localTimestamp);
+            element.dataset.time = time;
+            element.dataset.date = date;
+
+            const timeElement = element.querySelector('.time');
+            if (timeElement) {
+                timeElement.textContent = time;
+            }
+
+            const dateElement = element.querySelector('.date');
+            if (dateElement) {
+                dateElement.textContent = date;
+            }
         }
     </script>
 {% endblock content %}
