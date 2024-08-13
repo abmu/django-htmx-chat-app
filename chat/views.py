@@ -16,7 +16,6 @@ def home(request):
     })
 
 
-@login_required
 def direct_message(request, username):
     sender = request.user
     current_other_user = get_object_or_404(User, username__iexact=username)

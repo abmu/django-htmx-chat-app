@@ -7,12 +7,10 @@ from .forms import AddFriendForm, DeleteAccountForm
 from .models import User
 
 
-@login_required
 def manage_friends(request):
     return redirect('friends_list')
 
 
-@login_required
 def friends_list(request):
     user = request.user
     friends_mutual = user.friends_mutual
@@ -36,7 +34,6 @@ def remove_friend(request, username):
     return redirect('friends_list')
 
 
-@login_required
 def incoming_requests(request):
     user = request.user
     incoming_requests = user.get_incoming_requests()
@@ -64,7 +61,6 @@ def handle_incoming_request(request, username):
     return redirect('incoming_requests')
 
 
-@login_required
 def outgoing_requests(request):
     user = request.user
     outgoing_requests = user.get_outgoing_requests()
@@ -88,7 +84,6 @@ def cancel_outgoing_request(request, username):
     return redirect('outgoing_requests')
 
 
-@login_required
 def add_friend(request):
     if request.method == 'POST':
         form = AddFriendForm(request.POST, initial={'user': request.user})
@@ -104,12 +99,10 @@ def add_friend(request):
     })
 
 
-@login_required
 def settings(request):
     return redirect('account_email')
 
 
-@login_required
 def delete_account(request):
     if request.method == 'POST':
         form = DeleteAccountForm(request.POST, initial={'user': request.user})
