@@ -55,8 +55,12 @@ class User(AbstractUser):
         
         self.friends.add(friend)
         if self.has_friend_mutual(friend):
-            group_name = get_group_name(friend)
-            send_ws_message(group_name, {'type': 'friendship_created'})
+            groups = [get_group_name(self), get_group_name(friend)]
+            send_ws_message(
+                groups, {
+                    'type': 'friendship_created'
+                }
+            )
     
     def remove_friend(self, friend):
         '''Returns a tuple containing a boolean success flag (True if the friend is removed, False otherwise), and a message'''
@@ -66,8 +70,12 @@ class User(AbstractUser):
         self.friends.remove(friend)
         friend.friends.remove(self)
 
-        group_name = get_group_name(friend)
-        send_ws_message(group_name, {'type': 'friendship_removed'})
+        groups = [get_group_name(self), get_group_name(friend)]
+        send_ws_message(
+            groups, {
+                'type': 'friendship_removed'
+            }
+        )
 
         return True, 'Friend successfully removed'
     
@@ -105,8 +113,12 @@ class User(AbstractUser):
         self.save()
         
         for friend in self.friends_mutual:
-            group_name = get_group_name(friend)
-            send_ws_message(group_name, {'type': 'friend_account_deleted'})
+            # groups = [get_group_name(friend)]
+            # send_ws_message(
+            #     groups, {
+            #         'type': 'friend_account_deleted'
+            #     }
+            # )
 
             self.friends.remove(friend)
             friend.friends.remove(self)

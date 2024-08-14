@@ -10,8 +10,11 @@
         <li>
             <a href="{% url 'delete_account' %}">Delete account</a>
         </li>
+        <li>
+            <a href="{% url 'account_logout' %}">Logout</a>
+        </li>    
     </ul>
     
-    {% block subcontent %}
-    {% endblock subcontent %}
+    {% block settings_content %}
+    {% endblock settings_content %}
 {% endblock content %}

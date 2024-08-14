@@ -1,10 +1,10 @@
-<div id="chat-{{ other_user }}" class="recent-chat" data-last-sender="{{ last_message.sender }}" data-utc-timestamp="{{ last_message.timestamp }}">
+<div id="chat-{{ other_user.uuid }}" class="recent-chat" data-last-sender-uuid="{{ last_message.sender.uuid }}" data-utc-timestamp="{{ last_message.timestamp }}">
     <ul>
-        <li><a href="{% url 'direct_message' other_user %}">{{ other_user }}</a> (<span class="unread-count">{{ unread_count }}</span> new messages)</li>
-        <li>{{ last_message.sender }}: <span style="white-space: pre-wrap;">{{ last_message.content }}</span></li>
+        <li><a href="{% url 'direct_message' other_user.uuid %}">{{ other_user.username }}</a> (<span class="unread-count">{{ unread_count }}</span> new messages)</li>
+        <li>{{ last_message.sender.username }}: <span style="white-space: pre-wrap;">{{ last_message.content }}</span></li>
         <li class="date"></li>
         <li class="time"></li>
-        {% if last_message.sender == user.username %}
+        {% if last_message.sender.uuid == user.uuid|stringformat:'s' %}
             <li>Read: <span class="read-status">{{ last_message.read }}</span></li>
         {% endif %}
     </ul>

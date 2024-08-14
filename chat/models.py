@@ -40,8 +40,14 @@ class Message(models.Model):
         content = self.content[:visible_characters] + '...' if limit_content and len(self.content) > visible_characters else self.content
         return {
             'uuid': str(self.uuid),
-            'sender': self.sender.username,
-            'recipient': self.recipient.username,
+            'sender': {
+                'uuid': str(self.sender.uuid),
+                'username': self.sender.username
+            },
+            'recipient': {
+                'uuid': str(self.recipient.uuid),
+                'username': self.recipient.username
+            },
             'content': content,
             'timestamp': self.timestamp.isoformat(),
             'read': str(self.read)
@@ -67,16 +73,15 @@ class Message(models.Model):
             unread_count = new_messages.count()
             new_messages.update(read=True)
 
-            for user in [request_user, other_user]:
-                group_name = get_group_name(user)
-                send_ws_message(
-                    group_name, {
-                        'type': 'all_messages_read',
-                        'sender': other_user,
-                        'recipient': request_user,
-                        'unread_count': unread_count
-                    }
-                )
+            groups = [get_group_name(request_user), get_group_name(other_user)]
+            send_ws_message(
+                groups, {
+                    'type': 'all_messages_read',
+                    'sender': other_user,
+                    'recipient': request_user,
+                    'unread_count': unread_count
+                }
+            )
 
         return messages_list
     
@@ -99,21 +104,21 @@ class Message(models.Model):
 
             serialized_message = message.serialize(limit_content=True)
 
-            if other_user.username not in chats:
-                chats[other_user.username] = {
+            if other_user.id not in chats:
+                chats[other_user.id] = {
                     'other_user': other_user,
                     'last_message': serialized_message,
                     'last_timestamp': message.timestamp,
                     'unread_count': 0
                 }
-            elif chats[other_user.username]['last_timestamp'] < message.timestamp:
-                chats[other_user.username].update({
+            elif chats[other_user.id]['last_timestamp'] < message.timestamp:
+                chats[other_user.id].update({
                     'last_message': serialized_message,
                     'last_timestamp': message.timestamp
                 })
 
             if is_unread:
-                chats[other_user.username]['unread_count'] += 1
+                chats[other_user.id]['unread_count'] += 1
         
         recent_chats = sorted(chats.values(), key=lambda msg: msg['last_timestamp'], reverse=True)
         return recent_chats

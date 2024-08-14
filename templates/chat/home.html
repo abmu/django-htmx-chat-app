@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% block content %}
-    <p>Signed in as: {{ user }}</p>
+    <p>Signed in as: {{ user.username }}</p>
+
+    <a href="{% url 'friends_list' %}">Friends</a> (<span class="incoming-count">{{ incoming_requests|length }}</span> incoming requests)
 
     <div id="recent-chats">
         {% for chat in recent_chats %}
@@ -10,8 +12,8 @@
         {% endfor %}
     </div>
     
-    {% block subcontent %}
-    {% endblock subcontent %}
+    {% block home_content %}
+    {% endblock home_content %}
 
     <script>
         const dateFormatter = new Intl.DateTimeFormat(undefined, {
@@ -34,67 +36,6 @@
             return timeFormatter.format(timestamp);
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const recentChatElements = document.querySelectorAll('.recent-chat');
-            recentChatElements.forEach(recentChat => {
-                insertLocalTimestamp(recentChat);
-            });
-        });
-
-        function setAllMessagesRead(chat, otherUser) {
-            if (chat.recipient === '{{ user }}') {
-                // Update unread count if the user read the message but is not on the relevant chat (ie. they read message on another tab)
-                // The unread count would have already been updated if the user was on the relevant chat
-                if (!isCurrentChat(otherUser)) {
-                    decrementUnreadCount(otherUser, chat.unread);
-                }
-            } else {
-                updateRecentChatReadStatus(otherUser);
-                if (isCurrentChat(otherUser)) {
-                    const messageElements = document.querySelectorAll(`.message[data-sender="${chat.sender}"][data-read="False"]`);
-                    messageElements.forEach(updateMessageReadStatus);
-                }
-            }
-        }
-
-        function setMessageRead(message, otherUser) {
-            if (message.recipient === '{{ user }}') {
-                if (!isCurrentChat(otherUser)) {
-                    decrementUnreadCount(otherUser, 1);
-                }
-            } else {
-                updateRecentChatReadStatus(otherUser);
-                if (isCurrentChat(otherUser)) {
-                    const messageElement = document.getElementById(`message-${message.uuid}`);
-                    if (messageElement && messageElement.dataset.read === 'False') {
-                        updateMessageReadStatus(messageElement);
-                    }
-                }
-            }
-        }
-
-        function updateMessageReadStatus(messageElement) {
-            messageElement.dataset.read = 'True';
-            updateReadStatus(messageElement);
-        }
-
-        function updateRecentChatReadStatus(otherUser) {
-            const recentChatElement = document.getElementById(`chat-${otherUser}`);
-            updateReadStatus(recentChatElement);
-        }
-
-        function updateReadStatus(element) {
-            const readStatusElement = element.querySelector('.read-status');
-            readStatusElement.textContent = 'True';
-        }
-
-        function decrementUnreadCount(otherUser, count) {
-            const recentChatElement = document.getElementById(`chat-${otherUser}`);
-            const unreadCountElement = recentChatElement.querySelector('.unread-count');
-            const oldUnreadCount = parseInt(unreadCountElement.textContent);
-            unreadCountElement.textContent = Math.max(0, oldUnreadCount - count);
-        }
-
         function insertLocalTimestamp(element) {
             const utcTimestamp = element.dataset.utcTimestamp;
             const localTimestamp = getLocalTimestamp(utcTimestamp);
@@ -111,6 +52,101 @@
             const dateElement = element.querySelector('.date');
             if (dateElement) {
                 dateElement.textContent = date;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const recentChatElements = document.querySelectorAll('.recent-chat');
+            recentChatElements.forEach(recentChat => {
+                insertLocalTimestamp(recentChat);
+            });
+        });
+
+        function isCurrentChat(otherUserUuid) {
+            return '{{ current_other_user.uuid }}' && (otherUserUuid === '{{ current_other_user.uuid }}')
+        }
+
+        function htmlToElement(html, trim = true) {
+            html = trim ? html.trim() : html;
+            if (!html) return null;
+
+            const template = document.createElement('template');
+            template.innerHTML = html;
+            const result = template.content.children;
+
+            if (result.length === 1) return result[0];
+            return result;
+        }
+
+        function updateRecentChats(newRecentChatHtml) {
+            const newRecentChatElement = htmlToElement(newRecentChatHtml);
+            insertLocalTimestamp(newRecentChatElement);
+
+            const oldRecentChatElement = document.getElementById(newRecentChatElement.id);
+            if (oldRecentChatElement) {
+                oldRecentChatElement.remove();
+            }
+
+            let unreadCount = 0;
+            const lastSenderUuid = newRecentChatElement.dataset.lastSenderUuid;
+            if (lastSenderUuid !== '{{ user.uuid }}' && !isCurrentChat(lastSenderUuid)) {
+                if (oldRecentChatElement) {
+                    unreadCount = parseInt(oldRecentChatElement.querySelector('.unread-count').textContent) + 1;
+                } else {
+                    unreadCount = 1;
+                }
+            }
+            newRecentChatElement.querySelector('.unread-count').textContent = unreadCount;
+
+            document.getElementById('recent-chats').insertAdjacentElement('afterbegin', newRecentChatElement);
+        }
+
+        function updateReadStatus(element) {
+            const readStatusElement = element.querySelector('.read-status');
+            readStatusElement.textContent = 'True';
+        }
+
+        function updateRecentChatReadStatus(otherUserUuid) {
+            const recentChatElement = document.getElementById(`chat-${otherUserUuid}`);
+            updateReadStatus(recentChatElement);
+        }
+
+        function decrementUnreadCount(otherUserUuid, count) {
+            const recentChatElement = document.getElementById(`chat-${otherUserUuid}`);
+            const unreadCountElement = recentChatElement.querySelector('.unread-count');
+            const oldUnreadCount = parseInt(unreadCountElement.textContent);
+            unreadCountElement.textContent = Math.max(0, oldUnreadCount - count);
+        }
+
+        function setAllMessagesRead(chat, otherUserUuid) {
+            if (chat.recipientUuid === '{{ user.uuid }}') {
+                if (!isCurrentChat(otherUserUuid)) {
+                    // Update unread count if the user read the message but is not on the relevant chat (ie. they read message on another tab)
+                    // The unread count would have already been updated if the user was on the relevant chat
+                    decrementUnreadCount(otherUserUuid, chat.unreadCount);
+                }
+            } else {
+                updateRecentChatReadStatus(otherUserUuid);
+                if (isCurrentChat(otherUserUuid)) {
+                    const messageElements = document.querySelectorAll(`.message[data-sender-uuid="${chat.senderUuid}"][data-read="False"]`);
+                    messageElements.forEach(updateMessageReadStatus);
+                }
+            }
+        }
+
+        function setMessageRead(message, otherUserUuid) {
+            if (message.recipientUuid === '{{ user.uuid }}') {
+                if (!isCurrentChat(otherUserUuid)) {
+                    decrementUnreadCount(otherUserUuid, 1);
+                }
+            } else {
+                updateRecentChatReadStatus(otherUserUuid);
+                if (isCurrentChat(otherUserUuid)) {
+                    const messageElement = document.getElementById(`message-${message.uuid}`);
+                    if (messageElement && messageElement.dataset.read === 'False') {
+                        updateMessageReadStatus(messageElement);
+                    }
+                }
             }
         }
     </script>

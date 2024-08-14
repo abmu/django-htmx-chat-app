@@ -1,26 +1,28 @@
 {% extends 'chat/home.html' %}
-{% block subcontent %}
-    <h1>{{ current_other_user }}</h1>
+{% block home_content %}
+    <div>
+        <h1>{{ current_other_user }}</h1>
 
-    <div id="chat-error"></div>
-    <div id="friendship-status">
-        {% if not are_friends %}
-            {% include 'chat/snippets/not_friends_text.html' %}
-        {% endif %}
-    </div>
+        <div id="chat-error"></div>
+        <div id="friendship-status">
+            {% if not are_friends %}
+                {% include 'chat/snippets/not_friends_text.html' %}
+            {% endif %}
+        </div>
 
-    <!-- BUG: load ws message is sent twice, added 1ms delay as a workaround -->
-    <div ws-send hx-trigger="load delay:1ms" hx-vals='{"type":"chat_load", "current_other_user":"{{ current_other_user }}"}'></div>
-    <div ws-send hx-trigger="beforeunload from:window" hx-vals='{"type":"chat_unload"}'></div>
+        <!-- BUG: load ws message is sent twice, added 1ms delay as a workaround -->
+        <div ws-send hx-trigger="load delay:1ms" hx-vals='{"type":"chat_load", "uuid":"{{ current_other_user.uuid }}"}'></div>
+        <div ws-send hx-trigger="beforeunload from:window" hx-vals='{"type":"chat_unload"}'></div>
 
-    <form id="form" ws-send hx-vals='{"type":"chat_send"}'>
-        <input id="chat-input" name="content">
-    </form>
+        <form id="form" ws-send hx-vals='{"type":"chat_send"}'>
+            <input id="chat-input" name="content">
+        </form>
 
-    <div id="messages">
-        {% for message in all_messages reversed %}
-            {% include 'chat/snippets/message.html' %}
-        {% endfor %}
+        <div id="messages">
+            {% for message in all_messages reversed %}
+                {% include 'chat/snippets/message.html' %}
+            {% endfor %}
+        </div>
     </div>
 
     <script>
@@ -36,11 +38,6 @@
             return `{% include 'chat/snippets/new_messages_text.html' %}`
         }
 
-        function clearNewMessagesText() {
-            const newMessagesTextElement = document.getElementById('new-messages');
-            newMessagesTextElement.remove();
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
             let previousDate = null;
 
@@ -54,7 +51,7 @@
                     previousDate = currentDate;
                 }
 
-                const isNew = messageElement.dataset.recipient === '{{ user }}' && messageElement.dataset.read === 'False';
+                const isNew = messageElement.dataset.recipientUuid === '{{ user.uuid }}' && messageElement.dataset.read === 'False';
                 if (isNew === true) {
                     messageElement.dataset.read = 'True';
                     if (isNewMessagesText === false) {
@@ -83,6 +80,37 @@
             chatInputELement.value = '';
         });
 
+        function clearNewMessagesText() {
+            const newMessagesTextElement = document.getElementById('new-messages');
+            newMessagesTextElement.remove();
+        }
+
+        function updateMessages(newMessageHtml) {
+            const newMessageElement = htmlToElement(newMessageHtml);
+            insertLocalTimestamp(newMessageElement);
+
+            const messagesContainer = document.getElementById('messages');
+
+            const date = newMessageElement.dataset.date;
+            const dateTextElement = document.getElementById(`date-${date}`);
+            if (dateTextElement === null) {
+                const dateTextHtml = getDateTextHtml(date);
+                messagesContainer.insertAdjacentHTML('beforeend', dateTextHtml);
+            }
+
+            messagesContainer.insertAdjacentElement('beforeend', newMessageElement);
+
+            if (isNewMessagesText === true) {
+                clearNewMessagesText();
+                isNewMessagesText = false;
+            }
+        }
+
+        function updateMessageReadStatus(messageElement) {
+            messageElement.dataset.read = 'True';
+            updateReadStatus(messageElement);
+        }
+
         function displayChatErrorMessage() {
             const chatErrorElement = document.getElementById('chat-error');
             chatErrorElement.innerHTML = `{% include 'chat/snippets/error_text.html' %}`;
@@ -100,4 +128,4 @@
             friendshipStatusElement.innerHTML = `{% include 'chat/snippets/not_friends_text.html' %}`;
         }
     </script>
-{% endblock subcontent %}
+{% endblock home_content %}

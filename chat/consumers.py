@@ -5,7 +5,7 @@ from django.template.loader import get_template
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from .models import Message
-from .utils import get_group_name
+from .utils import get_group_name, send_ws_message
 
 User = get_user_model()
 
@@ -48,13 +48,13 @@ class ChatConsumer(WebsocketConsumer):
             content = json_data['content']
             self.handle_chat_send(content)
         elif message_type == 'chat_load':
-            current_other_user = json_data['current_other_user']
-            self.handle_chat_load(current_other_user)
+            uuid = json_data['uuid']
+            self.handle_chat_load(uuid)
         elif message_type == 'chat_unload':
             self.handle_chat_unload()
         
-    def handle_chat_load(self, username):
-        self.current_other_user = get_object_or_404(User, username=username)
+    def handle_chat_load(self, uuid):
+        self.current_other_user = get_object_or_404(User, uuid=uuid)
         self.current_other_user_group = get_group_name(self.current_other_user)
         self.are_friends = self.user.has_friend_mutual(self.current_other_user)
 
@@ -73,13 +73,13 @@ class ChatConsumer(WebsocketConsumer):
         
         message = self.create_message(content)
 
-        for group_name in [self.group_name, self.current_other_user_group]:
-            async_to_sync(self.channel_layer.group_send)(
-                group_name, {
-                    'type': 'chat_message',
-                    'message': message
-                }
-            )
+        groups = [self.group_name, self.current_other_user_group]
+        send_ws_message(
+            groups, {
+                'type': 'chat_message',
+                'message': message
+            }
+        )
 
     def create_message(self, content):
         return Message.objects.create(
@@ -112,7 +112,10 @@ class ChatConsumer(WebsocketConsumer):
         other_user = message.other_user(self.user)
 
         recent_chat_html = self.create_recent_chat_html(other_user, message)
-        self.send(text_data=recent_chat_html)
+        self.send(text_data=json.dumps({
+            'type': 'recent_chat_html',
+            'html': recent_chat_html
+        }))
 
         is_current_chat_message = other_user == self.current_other_user
         if not is_current_chat_message:
@@ -124,45 +127,55 @@ class ChatConsumer(WebsocketConsumer):
             message.read = True
 
         message_html = self.create_message_html(message)
-        self.send(text_data=message_html)
+        self.send(text_data=json.dumps({
+            'type': 'message_html',
+            'html': message_html
+        }))
 
     def mark_message_as_read(self, message):
         # Update the 'read' status of the message in the database and notify the sender and recipient, only if the database hasn't already been updated
         newly_updated = Message.objects.filter(uuid=message.uuid, read=False).update(read=True)
 
         if newly_updated > 0:
-            for group_name in [self.group_name, self.current_other_user_group]:
-                async_to_sync(self.channel_layer.group_send)(
-                    group_name, {
-                        'type': 'message_read',
-                        'message': message
-                    }
-                )
+            groups = [self.group_name, self.current_other_user_group]
+            send_ws_message(
+                groups, {
+                    'type': 'message_read',
+                    'message': message
+                }
+            )
 
     def message_read(self, event):
         message = event['message']
+        serialized_message = message.serialize()
         other_user = message.other_user(self.user)
 
         self.send(text_data=json.dumps({
             'type': 'message_read',
-            'message': message.serialize(),
-            'otherUser': other_user.username
+            'otherUserUuid': str(other_user.uuid),
+            'message': {
+                'uuid': serialized_message['uuid'],
+                'recipientUuid': serialized_message['recipient']['uuid']
+            }
         }))
 
     def all_messages_read(self, event):
         sender = event['sender']
         recipient = event['recipient']
         unread_count = event['unread_count']
-        other_user = recipient if sender == self.user else sender
+
+        sender_uuid = str(sender.uuid)
+        recipient_uuid = str(recipient.uuid)
+        other_user_uuid = recipient_uuid if sender == self.user else sender_uuid
 
         self.send(text_data=json.dumps({
             'type': 'all_messages_read',
+            'otherUserUuid': other_user_uuid,
             'chat': {
-                'sender': sender.username,
-                'recipient': recipient.username,
-                'unread': unread_count
-            },
-            'otherUser': other_user.username
+                'senderUuid': sender_uuid,
+                'recipientUuid': recipient_uuid,
+                'unreadCount': unread_count
+            }
         }))
 
 
@@ -170,6 +183,7 @@ class ChatConsumer(WebsocketConsumer):
 
 
     # SEND AND CHECK IF THE USERNAME OF FRIEND WHO ADDED/REMOVED/DELETED IS CURRENT
+    # WHAT HAPPENS IF USER DELETES ACCOUNT BUT THEY HAVE A CHAT OPEN IN ANOTHER TAB - SEND A MESSAGE TO CLOSE CONNECTION?
     # SHOW DELETED ACCOUNT IN CHAT LIST
 
 

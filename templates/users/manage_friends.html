@@ -1,20 +1,20 @@
-{% extends 'base.html' %}
-{% block content %}
+{% extends 'chat/home.html' %}
+{% block home_content %}
     <ul>
         <li>
-            <a href="{% url 'friends_list' %}">All friends</a>
+            <a href="{% url 'friends_list' %}">All friends</a> (<span class="friend-count">{{ friends_mutual|length }}</span>)
         </li>
         <li>
-            <a href="{% url 'incoming_requests' %}">Incoming requests</a>
+            <a href="{% url 'incoming_requests' %}">Incoming requests</a> (<span class="incoming-count">{{ incoming_requests|length }}</span>)
         </li>
         <li>
-            <a href="{% url 'outgoing_requests' %}">Outgoing requests</a>
+            <a href="{% url 'outgoing_requests' %}">Outgoing requests</a> (<span class="outgoing-count">{{ outgoing_requests|length }}</span>)
         </li>
         <li>
             <a href="{% url 'add_friend' %}">Add friend</a>
         </li>
     </ul>
     
-    {% block subcontent %}
-    {% endblock subcontent %}
-{% endblock content %}
+    {% block manage_friends_content %}
+    {% endblock manage_friends_content %}
+{% endblock home_content %}

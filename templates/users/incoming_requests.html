@@ -1,16 +1,17 @@
 {% extends 'users/manage_friends.html' %}
-{% block subcontent %}
-    <h1>Incoming requests ({{ incoming_requests|length }})</h1>
+{% block manage_friends_content %}
+    <h1>Incoming requests (<span class="incoming-count">{{ incoming_requests|length }}</span>)</h1>
     <ul>
         {% for sender in incoming_requests %}
             <li>
-                <a href="{% url 'direct_message' sender.username %}">{{ sender.username }}</a>
-                <form method="POST" action="{% url 'handle_incoming_request' sender.username %}">
+                <a href="{% url 'direct_message' sender.uuid %}">{{ sender.username }}</a>
+                <form method="POST" action="{% url 'incoming_requests' %}">
                     {% csrf_token %}
+                    <input type="hidden" name="uuid" value="{{ sender.uuid }}"/>
                     <button type="submit" name="action" value="accept">Accept</button>
                     <button type="submit" name="action" value="reject">Reject</button>
                 </form>
             </li>
         {% endfor %}
     </ul>
-{% endblock subcontent %}
+{% endblock manage_friends_content %}

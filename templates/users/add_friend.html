@@ -1,9 +1,9 @@
 {% extends 'users/manage_friends.html' %}
-{% block subcontent %}
+{% block manage_friends_content %}
     <h1>Add friend</h1>
     <form method="POST" action="{% url 'add_friend' %}">
         {% csrf_token %}
-        {{ form }}
+        {{ form.as_p }}
         <button type="submit">Send request</button>
     </form>
-{% endblock subcontent %}
+{% endblock manage_friends_content %}

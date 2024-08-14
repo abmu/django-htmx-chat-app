@@ -48,7 +48,7 @@ class AddFriendForm(forms.Form):
 
 
 class DeleteAccountForm(forms.Form):
-    password = forms.CharField(widget=forms.PasswordInput)
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Password'}))
 
     def clean_password(self):
         entered_password = self.cleaned_data['password']
