@@ -66,7 +66,7 @@
         document.body.addEventListener('htmx:wsConfigSend', (event) => {
             const content = event.detail.parameters.content;
             if (content === undefined) {
-                // The event was triggered by either chat load or unload 
+                // The event was triggered by either chat load or unload
                 return;
             }
             // Cancel event and don't send message if the users don't have a mutual friendship, or if the message is blank

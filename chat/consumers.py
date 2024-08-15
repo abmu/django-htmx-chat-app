@@ -1,8 +1,8 @@
 import json
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
+from django.core.exceptions import ValidationError
 from django.template.loader import get_template
-from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from .models import Message
 from .utils import get_group_name, send_ws_message
@@ -34,27 +34,37 @@ class ChatConsumer(WebsocketConsumer):
         if not hasattr(self, 'group_name'):
             return
         
+        # if self.current_other_user is not None:
+        #     self.handle_chat_unload()
+
         async_to_sync(self.channel_layer.group_discard)(
             self.group_name, self.channel_name
         )
-        
-        if self.current_other_user is not None:
-            self.handle_chat_unload()
 
     def receive(self, text_data):
-        json_data = json.loads(text_data)
-        message_type = json_data['type']
+        try:
+            json_data = json.loads(text_data)
+        except json.JSONDecodeError:
+            return
+        
+        message_type = json_data.get('type')
         if message_type == 'chat_send':
-            content = json_data['content']
+            content = json_data.get('content')
             self.handle_chat_send(content)
         elif message_type == 'chat_load':
-            uuid = json_data['uuid']
+            uuid = json_data.get('uuid')
             self.handle_chat_load(uuid)
         elif message_type == 'chat_unload':
             self.handle_chat_unload()
         
     def handle_chat_load(self, uuid):
-        self.current_other_user = get_object_or_404(User, uuid=uuid)
+        try:
+            self.current_other_user = User.objects.get(uuid=uuid)
+        except User.DoesNotExist:
+            return
+        except ValidationError:
+            return
+
         self.current_other_user_group = get_group_name(self.current_other_user)
         self.are_friends = self.user.has_friend_mutual(self.current_other_user)
 
@@ -67,8 +77,11 @@ class ChatConsumer(WebsocketConsumer):
         if not self.are_friends:
             return
         
+        if not isinstance(content, str):
+            return
+        
         content = content.strip()
-        if not content or content.isspace():
+        if not content:
             return
         
         message = self.create_message(content)

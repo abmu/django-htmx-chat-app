@@ -18,7 +18,8 @@ class User(AbstractUser):
     
     class Meta:
         indexes = [
-            models.Index(fields=['username'], name='username_idx')
+            models.Index(fields=['username'], name='username_idx'),
+            models.Index(fields=['uuid'], name='uuid_idx')
         ]
 
     # NOTE: Using @cached_property here provides limited benefit since the method returns a queryset object, rather than
