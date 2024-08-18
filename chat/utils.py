@@ -8,8 +8,17 @@ def get_group_name(user):
     return f'chat_{user.id}'
 
 
-def send_ws_message(groups, event):
-    for group_name in groups:
-        async_to_sync(channel_layer.group_send)(
-            group_name, event
-        )
+def send_ws_message(user, event):
+    group_name = get_group_name(user)
+    async_to_sync(channel_layer.group_send)(
+        group_name, event
+    )
+
+
+def send_ws_message_both_users(user_1, user_2, event):
+    for user, other_user in [
+        (user_1, user_2),
+        (user_2, user_1)
+    ]:
+        event['other_user'] = other_user.serialize()
+        send_ws_message(user, event)

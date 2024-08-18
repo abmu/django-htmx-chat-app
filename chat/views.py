@@ -27,12 +27,12 @@ def direct_message(request, uuid):
     user = request.user
     current_other_user = get_object_or_404(User, uuid=uuid)
     are_friends = user.has_friend_mutual(current_other_user)
-    messages = Message.get_messages(user, current_other_user)
+    chat_messages = Message.get_messages(user, current_other_user)
     
     return render(request, 'chat/direct_message.html', {
             'title': f'Chat - {current_other_user.username}',
             'current_other_user': current_other_user,
             'are_friends': are_friends,
-            'all_messages': messages
+            'chat_messages': chat_messages
         } | get_home_context(user)
     )

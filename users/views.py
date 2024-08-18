@@ -82,6 +82,8 @@ def add_friend(request):
         form = AddFriendForm(request.POST, initial={'user': user})
         if form.is_valid():
             form.save()
+            username = form.cleaned_data['username']
+            messages.success(request, f'You have successfully sent a friend request to {username}')
             return redirect('add_friend')
     else:
         form = AddFriendForm()

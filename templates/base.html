@@ -12,50 +12,23 @@
     <script src="https://unpkg.com/htmx-ext-ws@2.0.0/ws.js" defer></script>
 </head>
 <body>
-    <div hx-ext="ws" ws-connect="/ws/chat/">
-        <a href="{% url 'chat_home' %}">Home</a>
-        {% if user.is_authenticated %}
-            <a href="{% url 'settings' %}">Settings</a>
-        {% else %}
-            <a href="{% url 'account_login' %}">Login</a>
-            <a href="{% url 'account_signup' %}">Register</a>
-        {% endif %}
+    <a href="{% url 'chat_home' %}">Home</a>
+    {% if user.is_authenticated %}
+        <a href="{% url 'settings' %}">Settings</a>
+    {% else %}
+        <a href="{% url 'account_login' %}">Login</a>
+        <a href="{% url 'account_signup' %}">Register</a>
+    {% endif %}
 
-        {% if messages %}
-            {% for message in messages %}
-                <div>
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-        
-        {% block content %}
-        {% endblock content %}
-    </div>
-    <script>
-        const jsonMessageHandlers = {
-            'recent_chat_html': (jsonData) => updateRecentChats(jsonData.html),
-            'message_html': (jsonData) => updateMessages(jsonData.html),
-            'all_messages_read': (jsonData) => setAllMessagesRead(jsonData.chat, jsonData.otherUserUuid),
-            'message_read': (jsonData) => setMessageRead(jsonData.message, jsonData.otherUserUuid),
-            'friend_account_deleted': () => displayChatErrorMessage(),
-            'friendship_created': () => handleFriendshipCreated(),
-            'friendship_removed': () => handleFriendshipRemoved()
-        };
-
-        function handleJsonMessage(jsonData) {
-            if (jsonMessageHandlers[jsonData.type] !== undefined) {
-                jsonMessageHandlers[jsonData.type](jsonData);
-            }
-        }
-
-        document.body.addEventListener('htmx:wsBeforeMessage', (event) => {
-            const wsMessage = event.detail.message;
-            const jsonData = JSON.parse(wsMessage);
-            handleJsonMessage(jsonData);
-            // Cancel event to prevent any further unnecessary processing by HTMX
-            event.preventDefault();
-        });
-    </script>
+    {% if messages %}
+        {% for message in messages %}
+            <div>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    {% block content %}
+    {% endblock content %}
 </body>
 </html>

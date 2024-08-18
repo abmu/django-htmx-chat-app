@@ -1,5 +1,8 @@
 {% extends 'chat/home.html' %}
 {% block home_content %}
+    <div ws-send hx-trigger="load delay:1ms" hx-vals='{"type":"chat_load", "uuid":"{{ current_other_user.uuid }}"}'></div>
+    <!-- <div ws-send hx-trigger="beforeunload from:window" hx-vals='{"type":"chat_unload"}'></div> -->
+
     <div>
         <h1>{{ current_other_user }}</h1>
 
@@ -10,16 +13,12 @@
             {% endif %}
         </div>
 
-        <!-- BUG: load ws message is sent twice, added 1ms delay as a workaround -->
-        <div ws-send hx-trigger="load delay:1ms" hx-vals='{"type":"chat_load", "uuid":"{{ current_other_user.uuid }}"}'></div>
-        <div ws-send hx-trigger="beforeunload from:window" hx-vals='{"type":"chat_unload"}'></div>
-
         <form id="form" ws-send hx-vals='{"type":"chat_send"}'>
             <input id="chat-input" name="content">
         </form>
 
         <div id="messages">
-            {% for message in all_messages reversed %}
+            {% for message in chat_messages reversed %}
                 {% include 'chat/snippets/message.html' %}
             {% endfor %}
         </div>
@@ -38,6 +37,14 @@
             return `{% include 'chat/snippets/new_messages_text.html' %}`
         }
 
+        function getNotFriendsTextHtml() {
+            return `{% include 'chat/snippets/not_friends_text.html' %}`
+        }
+
+        function isNewUnreadMessage(messageElement) {
+            return messageElement.dataset.recipientUuid === '{{ user.uuid }}' && messageElement.dataset.read === 'False';
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             let previousDate = null;
 
@@ -51,10 +58,9 @@
                     previousDate = currentDate;
                 }
 
-                const isNew = messageElement.dataset.recipientUuid === '{{ user.uuid }}' && messageElement.dataset.read === 'False';
-                if (isNew === true) {
+                if (isNewUnreadMessage(messageElement)) {
                     messageElement.dataset.read = 'True';
-                    if (isNewMessagesText === false) {
+                    if (!isNewMessagesText) {
                         const newMessagesTextHtml = getNewMessagesTextHtml();
                         messageElement.insertAdjacentHTML('beforebegin', newMessagesTextHtml);
                         isNewMessagesText = true;
@@ -100,32 +106,27 @@
 
             messagesContainer.insertAdjacentElement('beforeend', newMessageElement);
 
-            if (isNewMessagesText === true) {
+            if (isNewMessagesText) {
                 clearNewMessagesText();
                 isNewMessagesText = false;
             }
         }
 
-        function updateMessageReadStatus(messageElement) {
+        function updateMessageElementReadStatus(messageElement) {
             messageElement.dataset.read = 'True';
             updateReadStatus(messageElement);
         }
 
-        function displayChatErrorMessage() {
-            const chatErrorElement = document.getElementById('chat-error');
-            chatErrorElement.innerHTML = `{% include 'chat/snippets/error_text.html' %}`;
+        function updateMessageReadStatus(messageUuid) {
+            const messageElement = document.getElementById(`message-${messageUuid}`);
+            if (messageElement && messageElement.dataset.read === 'False') {
+                updateMessageElementReadStatus(messageElement);
+            }
         }
 
-        function handleFriendshipCreated() {
-            areFriends = true;
-            const friendshipStatusElement = document.getElementById('friendship-status');
-            friendshipStatusElement.textContent = '';
-        }
-
-        function handleFriendshipRemoved() {
-            areFriends = false;
-            const friendshipStatusElement = document.getElementById('friendship-status');
-            friendshipStatusElement.innerHTML = `{% include 'chat/snippets/not_friends_text.html' %}`;
+        function updateAllMessagesReadStatus(senderUuid) {
+            const messageElements = document.querySelectorAll(`.message[data-sender-uuid="${senderUuid}"][data-read="False"]`);
+            messageElements.forEach(updateMessageElementReadStatus);
         }
     </script>
 {% endblock home_content %}

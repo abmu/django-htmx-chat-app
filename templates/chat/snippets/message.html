@@ -2,7 +2,7 @@
     <ul>
         <li>From: {{ message.sender.username }}</li>
         <li>To: {{ message.recipient.username }}</li>
-        <li style="white-space: pre-wrap;">{{ message.content }}</li>
+        <li style="white-space: pre-wrap;">{{ message.content.full }}</li>
         <li class="time"></li>
         {% if message.sender.uuid == user.uuid|stringformat:'s' %}
             <li>Read: <span class="read-status">{{ message.read }}</span></li>

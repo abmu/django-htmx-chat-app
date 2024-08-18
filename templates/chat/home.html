@@ -1,21 +1,54 @@
 {% extends 'base.html' %}
 {% block content %}
-    <p>Signed in as: {{ user.username }}</p>
+    <div hx-ext="ws" ws-connect="/ws/chat/">
+        <!-- BUG: load ws message is sent twice, added 1ms delay as a workaround -->
+        <div ws-send hx-trigger="load delay:1ms" hx-vals='{"type":"page_load", "path":"{{ request.path }}"}'></div>
 
-    <a href="{% url 'friends_list' %}">Friends</a> (<span class="incoming-count">{{ incoming_requests|length }}</span> incoming requests)
+        <p>Signed in as: {{ user.username }}</p>
 
-    <div id="recent-chats">
-        {% for chat in recent_chats %}
-            {% with other_user=chat.other_user last_message=chat.last_message unread_count=chat.unread_count %}
-                {% include 'chat/snippets/recent_chat.html' %}
-            {% endwith %}
-        {% endfor %}
+        <a href="{% url 'friends_list' %}">Friends</a> (<span class="incoming-count">{{ incoming_requests|length }}</span> incoming requests)
+
+        <div id="recent-chats">
+            {% for chat in recent_chats %}
+                {% with other_user=chat.other_user last_message=chat.last_message unread_count=chat.unread_count %}
+                    {% include 'chat/snippets/recent_chat.html' %}
+                {% endwith %}
+            {% endfor %}
+        </div>
+        
+        {% block home_content %}
+        {% endblock home_content %}
     </div>
-    
-    {% block home_content %}
-    {% endblock home_content %}
-
     <script>
+        const jsonMessageHandlers = {
+            'recent_chat_html': (jsonData) => updateRecentChats(jsonData.html),
+            'message_html': (jsonData) => updateMessages(jsonData.html),
+            'decrement_unread_count': (jsonData) => decrementUnreadCount(jsonData.otherUserUuid, jsonData.unreadCount),
+            'update_recent_chat_read_status': (jsonData) => updateRecentChatReadStatus(jsonData.otherUserUuid),
+            'update_message_read_status': (jsonData) => updateMessageReadStatus(jsonData.messageUuid),
+            'update_all_messages_read_status': (jsonData) => updateAllMessagesReadStatus(jsonData.senderUuid),
+            'friendship_created': (jsonData) => handleFriendshipCreated(jsonData.other_user),
+            'friendship_removed': (jsonData) => handleFriendshipRemoved(jsonData.other_user),
+            'friend_request_sent': (jsonData) => handleFriendRequestSent(jsonData.other_user),
+            'friend_request_rejected': (jsonData) => handleFriendRequestRejected(jsonData.other_user),
+            'friend_request_cancelled': (jsonData) => handleFriendRequestCancelled(jsonData.other_user),
+            'friend_account_deleted': (jsonData) => handleFriendAccountDeleted(jsonData.other_user)
+        };
+
+        function handleJsonMessage(jsonData) {
+            if (jsonMessageHandlers[jsonData.type] !== undefined) {
+                jsonMessageHandlers[jsonData.type](jsonData);
+            }
+        }
+
+        document.body.addEventListener('htmx:wsBeforeMessage', (event) => {
+            const wsMessage = event.detail.message;
+            const jsonData = JSON.parse(wsMessage);
+            handleJsonMessage(jsonData);
+            // Cancel event to prevent any further unnecessary processing by HTMX
+            event.preventDefault();
+        });
+
         const dateFormatter = new Intl.DateTimeFormat(undefined, {
             dateStyle: 'short'
         });
@@ -78,6 +111,11 @@
             return result;
         }
 
+        function setUnreadCount(recentChatElement, newUnreadCount) {
+            recentChatElement.dataset.unreadCount = newUnreadCount
+            recentChatElement.querySelector('.unread-count').textContent = newUnreadCount;
+        }
+
         function updateRecentChats(newRecentChatHtml) {
             const newRecentChatElement = htmlToElement(newRecentChatHtml);
             insertLocalTimestamp(newRecentChatElement);
@@ -87,66 +125,53 @@
                 oldRecentChatElement.remove();
             }
 
-            let unreadCount = 0;
-            const lastSenderUuid = newRecentChatElement.dataset.lastSenderUuid;
-            if (lastSenderUuid !== '{{ user.uuid }}' && !isCurrentChat(lastSenderUuid)) {
+            let unreadCount = newRecentChatElement.dataset.unreadCount;
+            if (unreadCount === 'INCREMENT') {
                 if (oldRecentChatElement) {
-                    unreadCount = parseInt(oldRecentChatElement.querySelector('.unread-count').textContent) + 1;
+                    unreadCount = parseInt(oldRecentChatElement.dataset.unreadCount) + 1;
                 } else {
                     unreadCount = 1;
                 }
             }
-            newRecentChatElement.querySelector('.unread-count').textContent = unreadCount;
+            setUnreadCount(newRecentChatElement, unreadCount);
 
             document.getElementById('recent-chats').insertAdjacentElement('afterbegin', newRecentChatElement);
         }
 
-        function updateReadStatus(element) {
+        function updateElementReadStatus(element) {
             const readStatusElement = element.querySelector('.read-status');
             readStatusElement.textContent = 'True';
         }
 
         function updateRecentChatReadStatus(otherUserUuid) {
             const recentChatElement = document.getElementById(`chat-${otherUserUuid}`);
-            updateReadStatus(recentChatElement);
+            updateElementReadStatus(recentChatElement);
         }
 
         function decrementUnreadCount(otherUserUuid, count) {
             const recentChatElement = document.getElementById(`chat-${otherUserUuid}`);
-            const unreadCountElement = recentChatElement.querySelector('.unread-count');
-            const oldUnreadCount = parseInt(unreadCountElement.textContent);
-            unreadCountElement.textContent = Math.max(0, oldUnreadCount - count);
+            const oldUnreadCount = parseInt(recentChatElement.dataset.unreadCount);
+            const newUnreadCount = Math.max(0, oldUnreadCount - count);
+            setUnreadCount(recentChatElement, newUnreadCount);
         }
 
-        function setAllMessagesRead(chat, otherUserUuid) {
-            if (chat.recipientUuid === '{{ user.uuid }}') {
-                if (!isCurrentChat(otherUserUuid)) {
-                    // Update unread count if the user read the message but is not on the relevant chat (ie. they read message on another tab)
-                    // The unread count would have already been updated if the user was on the relevant chat
-                    decrementUnreadCount(otherUserUuid, chat.unreadCount);
-                }
-            } else {
-                updateRecentChatReadStatus(otherUserUuid);
-                if (isCurrentChat(otherUserUuid)) {
-                    const messageElements = document.querySelectorAll(`.message[data-sender-uuid="${chat.senderUuid}"][data-read="False"]`);
-                    messageElements.forEach(updateMessageReadStatus);
-                }
+        function handleFriendshipCreated(otherUser) {
+            if (isCurrentChat(otherUser)) {
+                areFriends = true;
+                const friendshipStatusElement = document.getElementById('friendship-status');
+                friendshipStatusElement.textContent = '';
+            }
+
+            if (isOnFriendsPage()) {
+                
             }
         }
 
-        function setMessageRead(message, otherUserUuid) {
-            if (message.recipientUuid === '{{ user.uuid }}') {
-                if (!isCurrentChat(otherUserUuid)) {
-                    decrementUnreadCount(otherUserUuid, 1);
-                }
-            } else {
-                updateRecentChatReadStatus(otherUserUuid);
-                if (isCurrentChat(otherUserUuid)) {
-                    const messageElement = document.getElementById(`message-${message.uuid}`);
-                    if (messageElement && messageElement.dataset.read === 'False') {
-                        updateMessageReadStatus(messageElement);
-                    }
-                }
+        function handleFriendshipRemoved(otherUser) {
+            if (isCurrentChat(otherUser)) {
+                areFriends = false;
+                const friendshipStatusElement = document.getElementById('friendship-status');
+                friendshipStatusElement.innerHTML = getNotFriendsTextHtml();
             }
         }
     </script>

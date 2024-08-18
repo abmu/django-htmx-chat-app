@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from uuid import uuid4
-from .utils import get_group_name, send_ws_message
+from .utils import send_ws_message_both_users
 
 
 class Message(models.Model):
@@ -35,20 +35,17 @@ class Message(models.Model):
     def get_date(self):
         return self.timestamp.strftime("%Y-%m-%d")
     
-    def serialize(self, limit_content=False):
+    def serialize(self):
         visible_characters = 10
-        content = self.content[:visible_characters] + '...' if limit_content and len(self.content) > visible_characters else self.content
+        limited_content = self.content[:visible_characters] + '...' if len(self.content) > visible_characters else self.content
         return {
             'uuid': str(self.uuid),
-            'sender': {
-                'uuid': str(self.sender.uuid),
-                'username': self.sender.username
+            'sender': self.sender.serialize(),
+            'recipient': self.recipient.serialize(),
+            'content': {
+                'full': self.content,
+                'limited': limited_content,
             },
-            'recipient': {
-                'uuid': str(self.recipient.uuid),
-                'username': self.recipient.username
-            },
-            'content': content,
             'timestamp': self.timestamp.isoformat(),
             'read': str(self.read)
         }
@@ -57,31 +54,29 @@ class Message(models.Model):
         return self.recipient if self.sender == user else self.sender
     
     @classmethod
-    def get_messages(cls, request_user, other_user):
+    def get_messages(cls, request_user, request_other_user):
         '''Returns the messages sent directly between two users'''
         messages = cls.objects.filter(
-            models.Q(sender=request_user, recipient=other_user) |
-            models.Q(sender=other_user, recipient=request_user)
+            models.Q(sender=request_user, recipient=request_other_user) |
+            models.Q(sender=request_other_user, recipient=request_user)
         ).order_by('-timestamp')
 
         messages_list = []
         for message in messages:
             messages_list.append(message.serialize())
 
-        new_messages = messages.filter(read=False, sender=other_user)
-        if new_messages.exists():
-            unread_count = new_messages.count()
-            new_messages.update(read=True)
-
-            groups = [get_group_name(request_user), get_group_name(other_user)]
-            send_ws_message(
-                groups, {
-                    'type': 'all_messages_read',
-                    'sender': other_user,
-                    'recipient': request_user,
+        new_messages = messages.filter(read=False, sender=request_other_user)
+        unread_count = new_messages.update(read=True)
+        if unread_count > 0:
+            event = {
+                'type': 'all_messages_read',
+                'chat': {
+                    'sender': request_other_user.serialize(),
+                    'recipient': request_user.serialize(),
                     'unread_count': unread_count
                 }
-            )
+            }
+            send_ws_message_both_users(request_user, request_other_user, event)
 
         return messages_list
     
@@ -102,7 +97,7 @@ class Message(models.Model):
                 other_user = message.sender
                 is_unread = not message.read
 
-            serialized_message = message.serialize(limit_content=True)
+            serialized_message = message.serialize()
 
             if other_user.id not in chats:
                 chats[other_user.id] = {
