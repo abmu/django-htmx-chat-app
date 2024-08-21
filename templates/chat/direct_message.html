@@ -12,9 +12,20 @@
                 {% include 'chat/snippets/not_friends_text.html' %}
             {% endif %}
         </div>
-
-        <form id="form" ws-send hx-vals='{"type":"chat_send"}'>
-            <input id="chat-input" name="content">
+        
+        <!-- send POST request as a fallback if JavaScript is disabled and websockets can't be used -->
+        <form id="form" ws-send hx-vals='{"type":"chat_send"}' method="POST" action="{% url 'direct_message' current_other_user.uuid %}">
+            {% csrf_token %}
+            {% with field=form.content %}
+                {% if field.errors %}
+                    <ul>
+                        {% for error in field.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <input type="text" id="chat-input" name="{{ field.name }}" value="{{ field.value|default:'' }}" autofocus/>
+            {% endwith %}
         </form>
 
         <div id="messages">

@@ -6,9 +6,7 @@ from . import views
 urlpatterns = [
     path('login/', login_not_required(allauth_views.LoginView.as_view(template_name='account/login.html', extra_context={'title': 'Login'})), name='account_login'),
     path('logout/', login_not_required(allauth_views.LogoutView.as_view(extra_context={'title': 'Logout'})), name='account_logout'),
-    path('inactive/', login_not_required(allauth_views.AccountInactiveView.as_view(extra_context={'title': 'Account inactive'})), name='account_inactive'),
     path('signup/', login_not_required(allauth_views.SignupView.as_view(extra_context={'title': 'Signup'})), name='account_signup'),
-    path('reauthenticate/', allauth_views.ReauthenticateView.as_view(extra_context={'title': 'Reauthenticate'}), name='account_reauthenticate'),
     path('confirm-email/', login_not_required(allauth_views.EmailVerificationSentView.as_view(extra_context={'title': 'Email verification sent'})), name='account_email_verification_sent'),
     re_path(r'^confirm-email/(?P<key>[-:\w]+)/$', login_not_required(allauth_views.ConfirmEmailView.as_view(extra_context={'title': 'Confirm email address'})), name='account_confirm_email'),
     path('password-reset/', login_not_required(allauth_views.PasswordResetView.as_view(extra_context={'title': 'Request password reset'})), name='account_reset_password'),

@@ -2,8 +2,7 @@
     <ul>
         <li><a href="{% url 'direct_message' other_user.uuid %}">{{ other_user.username }}</a> (<span class="unread-count">{{ unread_count }}</span> new messages)</li>
         <li>{{ last_message.sender.username }}: <span style="white-space: pre-wrap;">{{ last_message.content.limited }}</span></li>
-        <li class="date"></li>
-        <li class="time"></li>
+        <li><span class="time">{{ last_message.timestamp }}</span> <span class="date"></span></li>
         {% if last_message.sender.uuid == user.uuid|stringformat:'s' %}
             <li>Read: <span class="read-status">{{ last_message.read }}</span></li>
         {% endif %}
