@@ -1,6 +1,7 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import never_cache
 from .models import Message
 
 User = get_user_model()
@@ -15,14 +16,10 @@ def get_home_context(user):
 
 @login_required(redirect_field_name=None)
 def home(request):
-    user = request.user
-
-    return render(request, 'chat/home.html', {
-            'title': 'Home',
-        } | get_home_context(user)
-    )
+    return redirect('friends_list')
 
 
+@never_cache
 def direct_message(request, uuid):
     user = request.user
     current_other_user = get_object_or_404(User, uuid=uuid)

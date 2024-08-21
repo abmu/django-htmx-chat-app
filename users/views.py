@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import logout
+from django.views.decorators.cache import never_cache
 from chat.views import get_home_context
 from .forms import AddFriendForm, DeleteAccountForm
 from .models import User
@@ -21,6 +22,7 @@ def manage_friends(request):
     return redirect('friends_list')
 
 
+@never_cache
 def friends_list(request):
     user = request.user
 
@@ -41,6 +43,7 @@ def friends_list(request):
     )
 
 
+@never_cache
 def incoming_requests(request):
     user = request.user
 
@@ -62,6 +65,7 @@ def incoming_requests(request):
     )
 
 
+@never_cache
 def outgoing_requests(request):
     user = request.user
 
@@ -82,6 +86,7 @@ def outgoing_requests(request):
     )
     
 
+@never_cache
 def add_friend(request):
     user = request.user
 

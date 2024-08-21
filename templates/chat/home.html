@@ -6,7 +6,7 @@
 
         <p>Signed in as: {{ user.username }}</p>
 
-        <a href="{% url 'friends_list' %}">Friends</a> (<span id="incoming-count-home">{{ incoming_requests|length }}</span> incoming requests)
+        <a href="{% url 'manage_friends' %}">Friends</a> (<span id="incoming-count-home">{{ incoming_requests|length }}</span> incoming requests)
 
         <div id="recent-chats">
             {% for chat in recent_chats %}
@@ -20,6 +20,11 @@
         {% endblock home_content %}
     </div>
     <script>
+        // Prevent a POST resubmit on refresh or back button
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+
         const jsonMessageHandlers = {
             'recent_chat_html': (jsonData) => updateRecentChats(jsonData.html),
             'message_html': (jsonData) => updateMessages(jsonData.html),
