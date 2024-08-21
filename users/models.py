@@ -55,9 +55,25 @@ class User(AbstractUser):
         '''Check if this user has sent a friend request to the specified user'''
         return self.get_outgoing_requests().contains(user)
     
-    def _get_friendship_created_event(self):
+    @staticmethod
+    def _get_serialized_request(sender, recipient):
         return {
-            'type': 'friendship_created'
+            'sender': sender.serialize(),
+            'recipient': recipient.serialize()
+        }
+
+    @classmethod
+    def _get_friend_request_accepted_event(cls, sender, recipient):
+        return {
+            'type': 'friend_request_accepted',
+            'request': cls._get_serialized_request(sender, recipient)
+        }
+    
+    @classmethod
+    def _get_friend_request_sent_event(cls, sender, recipient):
+        return {
+            'type': 'friend_request_sent',
+            'request': cls._get_serialized_request(sender, recipient)
         }
     
     def add_friend(self, friend):
@@ -65,17 +81,17 @@ class User(AbstractUser):
         self.friends.add(friend)
 
         if self.has_friend_mutual(friend):
-            event = self._get_friendship_created_event()
+            event = self._get_friend_request_accepted_event(sender=friend, recipient=self)
         else:
-            event = {
-                'type': 'friend_request_sent',
-                'request': {
-                    'sender': self.serialize(),
-                    'recipient': friend.serialize()
-                }
-            }
+            event = self._get_friend_request_sent_event(sender=self, recipient=friend)
         
-        send_ws_message_both_users(self, friend, event)
+        send_ws_message_both_users(self, friend, event=event)
+
+    @staticmethod
+    def _get_friend_removed_event():
+        return {
+            'type': 'friend_removed'
+        }
 
     def remove_friend(self, friend):
         '''Returns a tuple containing a boolean success flag (True if the friend is removed, False otherwise), and a message'''
@@ -85,12 +101,17 @@ class User(AbstractUser):
         self.friends.remove(friend)
         friend.friends.remove(self)
 
-        event = {
-            'type': 'friendship_removed'
-        }
-        send_ws_message_both_users(self, friend, event)
+        event = self._get_friend_removed_event()
+        send_ws_message_both_users(self, friend, event=event)
 
         return True, 'Friend successfully removed'
+    
+    @classmethod
+    def _get_friend_request_rejected_event(cls, sender, recipient):
+        return {
+            'type': 'friend_request_rejected',
+            'request': cls._get_serialized_request(sender, recipient)
+        }
     
     def handle_incoming_request(self, request_sender, action):
         '''Returns a tuple containing a boolean success flag (True if the incoming request is either rejected or accepted successfully, False otherwise), and a message'''
@@ -101,24 +122,25 @@ class User(AbstractUser):
             self.friends.add(request_sender)
             message = 'Incoming friend request successfully accepted'
 
-            event = self._get_friendship_created_event()
+            event = self._get_friend_request_accepted_event(sender=request_sender, recipient=self)
         elif action == 'reject':
             request_sender.friends.remove(self)
             message = 'Incoming friend request successfully rejected'
 
-            event = {
-                'type': 'friend_request_rejected',
-                'request': {
-                    'sender': request_sender.serialize(),
-                    'recipient': self.serialize()
-                }
-            }
+            event = self._get_friend_request_rejected_event(sender=request_sender, recipient=self)
         else:
             return False, 'Invalid action'
         
-        send_ws_message_both_users(self, request_sender, event)
+        send_ws_message_both_users(self, request_sender, event=event)
         
         return True, message
+    
+    @classmethod
+    def _get_friend_request_cancelled_event(cls, sender, recipient):
+        return {
+            'type': 'friend_request_cancelled',
+            'request': cls._get_serialized_request(sender, recipient)
+        }
     
     def cancel_outgoing_request(self, request_recipient):
         '''Returns a tuple containing a boolean success flag (True if the outgoing request is cancelled successfully, False otherwise), and a message'''
@@ -127,16 +149,37 @@ class User(AbstractUser):
 
         self.friends.remove(request_recipient)
 
-        event = {
-            'type': 'friend_request_cancelled',
-            'request': {
-                'sender': self,
-                'recipient': request_recipient
-            }
-        }
-        send_ws_message_both_users(self, request_recipient, event)
+        event = self._get_friend_request_cancelled_event(sender=self, recipient=request_recipient)
+        send_ws_message_both_users(self, request_recipient, event=event)
 
         return True, 'Outgoing friend request successfully cancelled'
+
+    @staticmethod
+    def _get_account_deleted_event():
+        return {
+            'type': 'account_deleted'
+        }
+    
+    def _clear_friends_and_requests(self):
+        other_user = {
+            'other_user': self.serialize()
+        }
+
+        friend_removed_event = self._get_friend_removed_event() | other_user
+        for friend in self.friends_mutual:
+            friend.friends.remove(self)
+            send_ws_message(friend, event=friend_removed_event)
+
+        for request_sender in self.get_incoming_requests():
+            request_sender.friends.remove(self)
+            friend_request_rejected_event = self._get_friend_request_rejected_event(sender=request_sender, recipient=self) | other_user
+            send_ws_message(request_sender, event=friend_request_rejected_event)
+
+        for request_recipient in self.get_outgoing_requests():
+            friend_request_cancelled_event = self._get_friend_request_cancelled_event(sender=self, recipient=request_recipient) | other_user
+            send_ws_message(request_recipient, event=friend_request_cancelled_event)
+
+        self.friends.clear()
 
     def delete_account(self):
         '''Delete a user's account data, but keep the old user id in the database'''
@@ -147,23 +190,10 @@ class User(AbstractUser):
         self.set_unusable_password()
         self.save()
 
-        send_ws_message(
-            self, {
-                'type': 'account_deleted'
-            }
-        )
+        account_deleted_event = self._get_account_deleted_event()
+        send_ws_message(self, event=account_deleted_event)
 
-        event = {
-            'type': 'friend_account_deleted',
-            'other_user': self.serialize()
-        }
-        
-        for friend in self.friends_mutual:
-            friend.friends.remove(self)
-            
-            send_ws_message(friend, event)
-
-        self.friends.clear()
+        self._clear_friends_and_requests()
 
         self.remove_redundant_users()
 

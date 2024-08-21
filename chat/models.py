@@ -49,10 +49,18 @@ class Message(models.Model):
             'timestamp': self.timestamp.isoformat(),
             'read': str(self.read)
         }
-    
-    def other_user(self, user):
-        return self.recipient if self.sender == user else self.sender
-    
+
+    @staticmethod
+    def _get_all_messages_read_event(sender, recipient, unread_count):
+        return {
+            'type': 'all_messages_read',
+            'chat': {
+                'sender': sender.serialize(),
+                'recipient': recipient.serialize(),
+                'unread_count': unread_count
+            }
+        }
+
     @classmethod
     def get_messages(cls, request_user, request_other_user):
         '''Returns the messages sent directly between two users'''
@@ -68,15 +76,8 @@ class Message(models.Model):
         new_messages = messages.filter(read=False, sender=request_other_user)
         unread_count = new_messages.update(read=True)
         if unread_count > 0:
-            event = {
-                'type': 'all_messages_read',
-                'chat': {
-                    'sender': request_other_user.serialize(),
-                    'recipient': request_user.serialize(),
-                    'unread_count': unread_count
-                }
-            }
-            send_ws_message_both_users(request_user, request_other_user, event)
+            event = cls._get_all_messages_read_event(sender=request_other_user, recipient=request_user, unread_count=unread_count)
+            send_ws_message_both_users(request_user, request_other_user, event=event)
 
         return messages_list
     

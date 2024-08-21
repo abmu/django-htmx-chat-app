@@ -25,7 +25,7 @@
     </div>
 
     <script>
-        let areFriends = '{{ are_friends }}' === 'True'; // Convert string to boolean
+        let currentAreFriends = '{{ are_friends }}' === 'True'; // Convert string to boolean
         
         let isNewMessagesText = false;
 
@@ -58,13 +58,15 @@
                     previousDate = currentDate;
                 }
 
-                if (isNewUnreadMessage(messageElement)) {
-                    messageElement.dataset.read = 'True';
-                    if (!isNewMessagesText) {
-                        const newMessagesTextHtml = getNewMessagesTextHtml();
-                        messageElement.insertAdjacentHTML('beforebegin', newMessagesTextHtml);
-                        isNewMessagesText = true;
-                    }
+                if (!isNewUnreadMessage(messageElement)) {
+                    return;
+                }
+
+                messageElement.dataset.read = 'True';
+                if (!isNewMessagesText) {
+                    const newMessagesTextHtml = getNewMessagesTextHtml();
+                    messageElement.insertAdjacentHTML('beforebegin', newMessagesTextHtml);
+                    isNewMessagesText = true;
                 }
             });
         });
@@ -76,7 +78,7 @@
                 return;
             }
             // Cancel event and don't send message if the users don't have a mutual friendship, or if the message is blank
-            if (!areFriends || !content.trim()) {
+            if (!currentAreFriends || !content.trim()) {
                 event.preventDefault();
             }
         });
@@ -114,7 +116,7 @@
 
         function updateMessageElementReadStatus(messageElement) {
             messageElement.dataset.read = 'True';
-            updateReadStatus(messageElement);
+            updateElementReadStatus(messageElement);
         }
 
         function updateMessageReadStatus(messageUuid) {
@@ -125,8 +127,14 @@
         }
 
         function updateAllMessagesReadStatus(senderUuid) {
-            const messageElements = document.querySelectorAll(`.message[data-sender-uuid="${senderUuid}"][data-read="False"]`);
+            const messageElements = document.querySelectorAll(`.message[data-sender-uuid='${senderUuid}'][data-read='False']`);
             messageElements.forEach(updateMessageElementReadStatus);
+        }
+        
+        function updateFriendship(areFriends) {
+            currentAreFriends = areFriends;
+            const friendshipStatusElement = document.getElementById('friendship-status');
+            friendshipStatusElement.innerHTML = currentAreFriends ? '' : getNotFriendsTextHtml();
         }
     </script>
 {% endblock home_content %}

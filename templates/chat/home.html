@@ -6,7 +6,7 @@
 
         <p>Signed in as: {{ user.username }}</p>
 
-        <a href="{% url 'friends_list' %}">Friends</a> (<span class="incoming-count">{{ incoming_requests|length }}</span> incoming requests)
+        <a href="{% url 'friends_list' %}">Friends</a> (<span id="incoming-count-home">{{ incoming_requests|length }}</span> incoming requests)
 
         <div id="recent-chats">
             {% for chat in recent_chats %}
@@ -23,16 +23,15 @@
         const jsonMessageHandlers = {
             'recent_chat_html': (jsonData) => updateRecentChats(jsonData.html),
             'message_html': (jsonData) => updateMessages(jsonData.html),
-            'decrement_unread_count': (jsonData) => decrementUnreadCount(jsonData.otherUserUuid, jsonData.unreadCount),
+            'decrement_unread_count': (jsonData) => decrementUnreadCount(jsonData.otherUserUuid, jsonData.count),
             'update_recent_chat_read_status': (jsonData) => updateRecentChatReadStatus(jsonData.otherUserUuid),
             'update_message_read_status': (jsonData) => updateMessageReadStatus(jsonData.messageUuid),
             'update_all_messages_read_status': (jsonData) => updateAllMessagesReadStatus(jsonData.senderUuid),
-            'friendship_created': (jsonData) => handleFriendshipCreated(jsonData.other_user),
-            'friendship_removed': (jsonData) => handleFriendshipRemoved(jsonData.other_user),
-            'friend_request_sent': (jsonData) => handleFriendRequestSent(jsonData.other_user),
-            'friend_request_rejected': (jsonData) => handleFriendRequestRejected(jsonData.other_user),
-            'friend_request_cancelled': (jsonData) => handleFriendRequestCancelled(jsonData.other_user),
-            'friend_account_deleted': (jsonData) => handleFriendAccountDeleted(jsonData.other_user)
+            'update_section_count': (jsonData) => updateSectionCount(jsonData.page, jsonData.section, jsonData.action),
+            'remove_user_from_section': (jsonData) => removeUserFromSection(jsonData.section, jsonData.otherUserUuid),
+            'add_user_html_to_section': (jsonData) => addUserHtmlToSection(jsonData.section, jsonData.html),
+            'update_friendship': (jsonData) => updateFriendship(jsonData.areFriends),
+            'account_deleted': (jsonData) => handleAccountDeleted()
         };
 
         function handleJsonMessage(jsonData) {
@@ -126,14 +125,10 @@
             }
 
             let unreadCount = newRecentChatElement.dataset.unreadCount;
-            if (unreadCount === 'INCREMENT') {
-                if (oldRecentChatElement) {
-                    unreadCount = parseInt(oldRecentChatElement.dataset.unreadCount) + 1;
-                } else {
-                    unreadCount = 1;
-                }
+            if (unreadCount === 'increment') {
+                unreadCount = oldRecentChatElement ? parseInt(oldRecentChatElement.dataset.unreadCount) + 1 : 1;
+                setUnreadCount(newRecentChatElement, unreadCount);
             }
-            setUnreadCount(newRecentChatElement, unreadCount);
 
             document.getElementById('recent-chats').insertAdjacentElement('afterbegin', newRecentChatElement);
         }
@@ -155,24 +150,16 @@
             setUnreadCount(recentChatElement, newUnreadCount);
         }
 
-        function handleFriendshipCreated(otherUser) {
-            if (isCurrentChat(otherUser)) {
-                areFriends = true;
-                const friendshipStatusElement = document.getElementById('friendship-status');
-                friendshipStatusElement.textContent = '';
-            }
-
-            if (isOnFriendsPage()) {
-                
-            }
+        function updateSectionCount(page, section, action) {
+            const suffix = page === 'home' ? '-home' : '';
+            const sectionElement = document.getElementById(`${section}-count${suffix}`);
+            const oldCount = parseInt(sectionElement.textContent);
+            const newCount = action === 'increment' ? oldCount + 1 : Math.max(0, oldCount - 1);
+            sectionElement.textContent = newCount;
         }
 
-        function handleFriendshipRemoved(otherUser) {
-            if (isCurrentChat(otherUser)) {
-                areFriends = false;
-                const friendshipStatusElement = document.getElementById('friendship-status');
-                friendshipStatusElement.innerHTML = getNotFriendsTextHtml();
-            }
+        function handleAccountDeleted() {
+            window.location.replace(`{% url 'chat_home' %}`);
         }
     </script>
 {% endblock content %}

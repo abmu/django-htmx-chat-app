@@ -41,7 +41,7 @@ class AddFriendForm(forms.Form):
         if self.user.has_outgoing_request_to(self.friend):
             raise forms.ValidationError('You have already sent a friend request to this user')
 
-        return entered_username
+        return self.friend.username
     
     def save(self):
         self.user.add_friend(self.friend)

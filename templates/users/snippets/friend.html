@@ -1,0 +1,8 @@
+<div id="friend-{{ friend.uuid }}" class="friend" data-username="{{ friend.username }}">
+    <a href="{% url 'direct_message' friend.uuid %}">{{ friend.username }}</a>
+    <form method="POST" action="{% url 'friends_list' %}">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+        <input type="hidden" name="uuid" value="{{ friend.uuid }}"/>
+        <button type="submit" name="action" value="remove">Remove</button>
+    </form>
+</div>

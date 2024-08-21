@@ -21,4 +21,4 @@ def send_ws_message_both_users(user_1, user_2, event):
         (user_2, user_1)
     ]:
         event['other_user'] = other_user.serialize()
-        send_ws_message(user, event)
+        send_ws_message(user, event=event)

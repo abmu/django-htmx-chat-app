@@ -13,6 +13,10 @@ def get_friends_context(user):
     } 
 
 
+def get_csrf_token(request):
+    return request.COOKIES.get('csrftoken')
+
+
 def manage_friends(request):
     return redirect('friends_list')
 
@@ -31,7 +35,8 @@ def friends_list(request):
         return redirect('friends_list')
 
     return render(request, 'users/friends_list.html', {
-            'title': 'Friends list'
+            'title': 'Friends list',
+            'csrf_token': get_csrf_token(request)
         } | get_friends_context(user)
     )
 
@@ -51,7 +56,8 @@ def incoming_requests(request):
         return redirect('incoming_requests')
 
     return render(request, 'users/incoming_requests.html', {
-            'title': 'Incoming requests'
+            'title': 'Incoming requests',
+            'csrf_token': get_csrf_token(request)
         } | get_friends_context(user)
     )
 
@@ -70,7 +76,8 @@ def outgoing_requests(request):
         return redirect('outgoing_requests')
 
     return render(request, 'users/outgoing_requests.html', {
-            'title': 'Outgoing requests'
+            'title': 'Outgoing requests',
+            'csrf_token': get_csrf_token(request)
         } | get_friends_context(user)
     )
     
@@ -90,7 +97,7 @@ def add_friend(request):
 
     return render(request, 'users/add_friend.html', {
             'title': 'Add friend',
-            'form': form
+            'form': form,
         } | get_friends_context(user)
     )
 

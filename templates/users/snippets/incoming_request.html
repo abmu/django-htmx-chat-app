@@ -1,0 +1,9 @@
+<div id="incoming-{{ sender.uuid }}" class="incoming-request" data-username="{{ sender.username }}">
+    <a href="{% url 'direct_message' sender.uuid %}">{{ sender.username }}</a>
+    <form method="POST" action="{% url 'incoming_requests' %}">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+        <input type="hidden" name="uuid" value="{{ sender.uuid }}"/>
+        <button type="submit" name="action" value="accept">Accept</button>
+        <button type="submit" name="action" value="reject">Reject</button>
+    </form>
+</div>

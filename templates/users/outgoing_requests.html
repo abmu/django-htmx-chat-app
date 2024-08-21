@@ -1,16 +1,9 @@
 {% extends 'users/manage_friends.html' %}
 {% block manage_friends_content %}
-    <h1>Outgoing requests (<span class="outgoing-count">{{ outgoing_requests|length }}</span>)</h1>
-    <ul>
+    <h1>Outgoing requests</h1>
+    <div id="outgoing-requests">
         {% for recipient in outgoing_requests %}
-            <li>
-                <a href="{% url 'direct_message' recipient.uuid %}">{{ recipient.username }}</a>
-                <form method="POST" action="{% url 'outgoing_requests' %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="uuid" value="{{ recipient.uuid }}"/>
-                    <button type="submit" name="action" value="cancel">Cancel</button>
-                </form>
-            </li>
+            {% include 'users/snippets/outgoing_request.html' %}
         {% endfor %}
-    </ul>
+    </div>
 {% endblock manage_friends_content %}
