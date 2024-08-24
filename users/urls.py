@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_not_required
 from allauth.account import views as allauth_views
 from . import views
 
+MANAGE_FRIENDS_URLS = ['manage_friends', 'friends_list', 'incoming_requests', 'outgoing_requests', 'add_friend']
+
 urlpatterns = [
     path('login/', login_not_required(allauth_views.LoginView.as_view(template_name='account/login.html', extra_context={'title': 'Login'})), name='account_login'),
     path('logout/', login_not_required(allauth_views.LogoutView.as_view(extra_context={'title': 'Logout'})), name='account_logout'),

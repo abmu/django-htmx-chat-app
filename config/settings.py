@@ -54,6 +54,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'django.contrib.auth.middleware.LoginRequiredMiddleware',
+    'middleware.no_cache_middleware.no_cache_middleware',
 ]
 
 ROOT_URLCONF = 'config.urls'

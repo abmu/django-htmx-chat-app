@@ -4,7 +4,9 @@ from channels.generic.websocket import WebsocketConsumer
 from django.core.exceptions import ValidationError
 from django.template.loader import get_template
 from django.contrib.auth import get_user_model
-from django.urls import reverse
+from django.urls import resolve, Resolver404
+from users.urls import MANAGE_FRIENDS_URLS
+from .urls import CHAT_URLS
 from .models import Message
 from .utils import get_group_name, send_ws_message_both_users
 
@@ -26,7 +28,7 @@ class ChatConsumer(WebsocketConsumer):
             self.user_group, self.channel_name
         )
 
-        self.current_path = None
+        self.url_name = None
         self.current_other_user = None
         self.are_friends = None
 
@@ -53,22 +55,31 @@ class ChatConsumer(WebsocketConsumer):
         elif message_type == 'page_load':
             path = json_data.get('path')
             self.handle_page_load(path)
-        elif message_type == 'chat_load':
-            uuid = json_data.get('uuid')
-            self.handle_chat_load(uuid)
 
     def handle_page_load(self, path):
-        self.current_path = path
-        
+        self.handle_page_unload()
+
+        try:
+            resolved = resolve(path)
+            self.url_name = resolved.url_name
+            if self.url_name == 'direct_message':
+                uuid = resolved.kwargs['uuid']
+                self.handle_chat_load(uuid)
+        except Resolver404:
+            return
+
     def handle_chat_load(self, uuid):
         try:
             self.current_other_user = User.objects.get(uuid=uuid)
         except User.DoesNotExist:
             return
-        except ValidationError:
-            return
 
         self.are_friends = self.user.has_friend_mutual(self.current_other_user)
+
+    def handle_page_unload(self):
+        self.url_name = None
+        self.current_other_user = None
+        self.are_friends = None
 
     def _create_message(self, content):
         return Message.objects.create(
@@ -107,8 +118,14 @@ class ChatConsumer(WebsocketConsumer):
     def _is_current_other_user(self, serialized_other_user):
         return self.current_other_user and serialized_other_user['uuid'] == str(self.current_other_user.uuid)
     
+    def _in_chat_area(self):
+        return self.url_name in CHAT_URLS + MANAGE_FRIENDS_URLS
+    
+    def _in_friends_area(self):
+        return self.url_name in MANAGE_FRIENDS_URLS
+    
     def _create_recent_chat_html(self, serialized_message, other_user, unread_count):
-        return get_template('chat/snippets/recent_chat.html').render(
+        return get_template('chat/partials/recent_chat.html').render(
             context={
                 'last_message': serialized_message,
                 'user': self.user,
@@ -124,7 +141,7 @@ class ChatConsumer(WebsocketConsumer):
         }))
 
     def _create_message_html(self, serialized_message):
-        return get_template('chat/snippets/message.html').render(
+        return get_template('chat/partials/message.html').render(
             context={
                 'message': serialized_message,
                 'user': self.user
@@ -142,7 +159,11 @@ class ChatConsumer(WebsocketConsumer):
         other_user = event['other_user']
 
         is_recipient = self._is_recipient(serialized_message)
+        in_chat_area = self._in_chat_area()
         is_on_relevant_chat = self._is_current_other_user(other_user)
+
+        if not in_chat_area:
+            return
 
         unread_count = 0
         if is_recipient:
@@ -204,7 +225,11 @@ class ChatConsumer(WebsocketConsumer):
     def _handle_read_event(self, event, is_all_messages_read):
         other_user = event['other_user']
         is_recipient = self._is_recipient(event['chat' if is_all_messages_read else 'serialized_message'])
+        in_chat_area = self._in_chat_area()
         is_on_relevant_chat = self._is_current_other_user(other_user)
+
+        if not in_chat_area:
+            return
 
         if is_recipient:
             if not is_on_relevant_chat:
@@ -255,7 +280,7 @@ class ChatConsumer(WebsocketConsumer):
         }))
 
     def _create_incoming_request_html(self, sender):
-        return get_template('users/snippets/incoming_request.html').render(
+        return get_template('users/partials/incoming_request.html').render(
             context={
                 'sender': sender,
                 'csrf_token': self.scope['csrf_token']
@@ -263,7 +288,7 @@ class ChatConsumer(WebsocketConsumer):
         )
 
     def _create_outgoing_request_html(self, recipient):
-        return get_template('users/snippets/outgoing_request.html').render(
+        return get_template('users/partials/outgoing_request.html').render(
             context={
                 'recipient': recipient,
                 'csrf_token': self.scope['csrf_token']
@@ -284,24 +309,29 @@ class ChatConsumer(WebsocketConsumer):
     def _handle_friend_request_event(self, event, is_friend_request_removed):
         other_user = event['other_user']
         is_recipient = self._is_recipient(event['request'])
+        in_chat_area = self._in_chat_area()
+        in_friends_area = self._in_friends_area()
         section = 'incoming' if is_recipient else 'outgoing'
         count_action = 'decrement' if is_friend_request_removed else 'increment'
+
+        if not in_chat_area:
+            return
 
         if is_recipient:
             self._send_update_section_count('home', section, count_action)
 
-        if not self.current_path.startswith(reverse('manage_friends')):
+        if not in_friends_area:
             return
         
         self._send_update_section_count('manage_friends', section, count_action)
 
-        if self.current_path == reverse('incoming_requests') and is_recipient:
+        if self.url_name == 'incoming_requests' and is_recipient:
             if is_friend_request_removed:
                 self._send_remove_user_from_section(section, other_user)
             else:
                 incoming_request_html = self._create_incoming_request_html(other_user)
                 self._send_add_user_html_to_section(section, incoming_request_html)
-        elif self.current_path == reverse('outgoing_requests') and not is_recipient:
+        elif self.url_name == 'outgoing_requests' and not is_recipient:
             if is_friend_request_removed:
                 self._send_remove_user_from_section(section, other_user)
             else:
@@ -309,7 +339,7 @@ class ChatConsumer(WebsocketConsumer):
                 self._send_add_user_html_to_section(section, outgoing_request_html)
     
     def _create_friend_html(self, friend):
-        return get_template('users/snippets/friend.html').render(
+        return get_template('users/partials/friend.html').render(
             context={
                 'friend': friend,
                 'csrf_token': self.scope['csrf_token']
@@ -324,13 +354,14 @@ class ChatConsumer(WebsocketConsumer):
 
     def _handle_friendship_change(self, event, are_friends):
         other_user = event['other_user']
+        in_friends_area = self._in_friends_area()
         section = 'friends'
         count_action = 'increment' if are_friends else 'decrement'
 
-        if self.current_path.startswith(reverse('manage_friends')):
+        if in_friends_area:
             self._send_update_section_count('manage_friends', section, count_action)
 
-            if self.current_path != reverse('friends_list'):
+            if self.url_name != 'friends_list':
                 return
             
             if are_friends:
