@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import logout
-from django.views.decorators.cache import never_cache
+from django.contrib.auth.decorators import login_required
 from chat.views import get_home_context
 from .forms import AddFriendForm, DeleteAccountForm
 from .models import User
@@ -16,13 +16,15 @@ def get_friends_context(user):
 
 def get_csrf_token(request):
     return request.COOKIES.get('csrftoken')
+ 
 
-
+@login_required(redirect_field_name=None)
 def manage_friends(request):
+    request.session['from_manage_friends'] = True
     return redirect('friends_list')
 
 
-@never_cache
+@login_required(redirect_field_name=None)
 def friends_list(request):
     user = request.user
 
@@ -36,14 +38,36 @@ def friends_list(request):
 
         return redirect('friends_list')
 
-    return render(request, 'users/friends_list.html', {
-            'title': 'Friends list',
-            'csrf_token': get_csrf_token(request)
-        } | get_friends_context(user)
+    context = {
+        'title': 'Friends list',
+        'csrf_token': get_csrf_token(request)
+    }
+
+    is_htmx_request = request.headers.get('HX-Request') == 'true'
+    is_history_restore_request = request.headers.get('HX-History-Restore-Request') == 'true'
+    from_home = request.session.pop('from_home', False)
+    from_manage_friends = request.session.pop('from_manage_friends', False)
+
+    if not is_htmx_request or is_history_restore_request or from_home:
+        return render(request, 'users/friends_list.html', context | get_friends_context(user))
+    
+    if from_manage_friends:
+        return render(request, 'users/friends_list.html',
+            context | {
+                'friends_mutual': user.friends_mutual,
+                'incoming_requests': user.get_incoming_requests(),
+                'outgoing_requests': user.get_outgoing_requests()
+            }
+        )
+    
+    return render(request, 'users/partials/friends_list.html',
+        context | {
+            'friends_mutual': user.friends_mutual
+        }
     )
 
 
-@never_cache
+@login_required(redirect_field_name=None)
 def incoming_requests(request):
     user = request.user
 
@@ -58,14 +82,20 @@ def incoming_requests(request):
         
         return redirect('incoming_requests')
 
-    return render(request, 'users/incoming_requests.html', {
-            'title': 'Incoming requests',
-            'csrf_token': get_csrf_token(request)
-        } | get_friends_context(user)
-    )
+    context = {
+        'title': 'Incoming requests',
+        'csrf_token': get_csrf_token(request)
+    }
+    if request.headers.get('HX-Request') and not request.headers.get('HX-History-Restore-Request'):
+        return render(request, 'users/partials/incoming_requests.html',
+            context | {
+                'incoming_requests': user.get_incoming_requests()
+            }
+        )
+    return render(request, 'users/incoming_requests.html', context | get_friends_context(user))
 
 
-@never_cache
+@login_required(redirect_field_name=None)
 def outgoing_requests(request):
     user = request.user
 
@@ -79,14 +109,20 @@ def outgoing_requests(request):
 
         return redirect('outgoing_requests')
 
-    return render(request, 'users/outgoing_requests.html', {
-            'title': 'Outgoing requests',
-            'csrf_token': get_csrf_token(request)
-        } | get_friends_context(user)
-    )
+    context = {
+        'title': 'Outgoing requests',
+        'csrf_token': get_csrf_token(request)
+    }
+    if request.headers.get('HX-Request') and not request.headers.get('HX-History-Restore-Request'):
+        return render(request, 'users/partials/outgoing_requests.html',
+            context | {
+                'outgoing_requests': user.get_outgoing_requests()
+            }
+        )
+    return render(request, 'users/outgoing_requests.html', context | get_friends_context(user))
     
 
-@never_cache
+@login_required(redirect_field_name=None)
 def add_friend(request):
     user = request.user
 
@@ -100,11 +136,13 @@ def add_friend(request):
     else:
         form = AddFriendForm()
 
-    return render(request, 'users/add_friend.html', {
-            'title': 'Add friend',
-            'form': form,
-        } | get_friends_context(user)
-    )
+    context = {
+        'title': 'Add friend',
+        'form': form,
+    }
+    if request.headers.get('HX-Request') and not request.headers.get('HX-History-Restore-Request'):
+        return render(request, 'users/partials/add_friend.html', context)
+    return render(request, 'users/add_friend.html', context | get_friends_context(user))
 
 
 def settings(request):
