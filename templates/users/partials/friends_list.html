@@ -1,0 +1,8 @@
+{% include 'partials/hx_request_check.html' %}
+
+<h1>Friends list</h1>
+<div id="friends-list">
+    {% for friend in friends_mutual %}
+        {% include 'users/partials/friend.html' %}
+    {% endfor %}
+</div>

@@ -1,0 +1,8 @@
+{% include 'partials/hx_request_check.html' %}
+
+<h1>Add friend</h1>
+<form method="POST" action="{% url 'add_friend' %}" hx-target="#manage-friends-content">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Send request</button>
+</form>

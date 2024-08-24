@@ -1,0 +1,75 @@
+{% include 'partials/hx_request_check.html' %}
+
+<h1>{{ current_other_user }}</h1>
+<div id="friendship-status">
+    {% if not are_friends %}
+        {% include 'chat/partials/not_friends_text.html' %}
+    {% endif %}
+</div>
+<form id="form" ws-send hx-vals='{"type":"chat_send"}' method="POST" action="{% url 'direct_message' current_other_user.uuid %}"> <!-- Send POST request as a fallback if JavaScript is disabled and websockets can't be used -->
+    {% csrf_token %}
+    {% with field=form.content %}
+        {% if field.errors %}
+            <ul>
+                {% for error in field.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        <input type="text" id="chat-input" name="{{ field.name }}" value="{{ field.value|default:'' }}" autofocus/>
+    {% endwith %}
+</form>
+<div id="messages">
+    {% for message in chat_messages reversed %}
+        {% include 'chat/partials/message.html' %}
+    {% endfor %}
+</div>
+
+<script>
+    currentAreFriends = '{{ are_friends }}' === 'True'; // Convert string to boolean
+    isNewMessagesText = false;
+
+    function getDateTextHtml(date) {
+        return `{% include 'chat/partials/date_text.html' with date='TEMP' %}`.replaceAll('TEMP', date);
+    }
+
+    function getNewMessagesTextHtml() {
+        return `{% include 'chat/partials/new_messages_text.html' %}`
+    }
+
+    function getNotFriendsTextHtml() {
+        return `{% include 'chat/partials/not_friends_text.html' %}`
+    }
+
+    function handleMessagesLoad() {
+        let previousDate = null;
+
+        const messageElements = document.querySelectorAll('.message');
+        messageElements.forEach(messageElement => {
+            insertLocalTimestamp(messageElement);
+            const currentDate = messageElement.dataset.date;
+            if (currentDate !== previousDate) {
+                const dateTextHtml = getDateTextHtml(currentDate);
+                messageElement.insertAdjacentHTML('beforebegin', dateTextHtml);
+                previousDate = currentDate;
+            }
+
+            if (!isNewUnreadMessage(messageElement, '{{ user.uuid }}')) {
+                return;
+            }
+
+            messageElement.dataset.read = 'True';
+            if (!isNewMessagesText) {
+                const newMessagesTextHtml = getNewMessagesTextHtml();
+                messageElement.insertAdjacentHTML('beforebegin', newMessagesTextHtml);
+                isNewMessagesText = true;
+            }
+        });
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", handleMessagesLoad);
+    } else {
+        handleMessagesLoad();
+    }
+</script>

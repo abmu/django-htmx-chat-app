@@ -1,9 +1,4 @@
 {% extends 'users/manage_friends.html' %}
 {% block manage_friends_content %}
-    <h1>Outgoing requests</h1>
-    <div id="outgoing-requests">
-        {% for recipient in outgoing_requests %}
-            {% include 'users/snippets/outgoing_request.html' %}
-        {% endfor %}
-    </div>
+    {% include 'users/partials/outgoing_requests.html' %}
 {% endblock manage_friends_content %}

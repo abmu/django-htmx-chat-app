@@ -10,8 +10,11 @@
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@2.0.1" integrity="sha384-QWGpdj554B4ETpJJC9z+ZHJcA/i59TyjxEPXiiUgN2WmTyV5OEZWCD6gQhgkdpB/" crossorigin="anonymous" defer></script>
     <script src="https://unpkg.com/htmx-ext-ws@2.0.0/ws.js" defer></script>
+
+    <script src="{% static 'main.js' %}" defer></script>
 </head>
-<body>
+<body hx-boost="true" hx-ext="ws" ws-connect="/ws/chat/" hx-history="false">
+    <div id="load" ws-send hx-trigger="load delay:1ms, htmx:afterSwap from:body" hx-vals='js:{"type":"page_load", "path": window.location.pathname}'></div> <!-- BUG: WS load message is sent twice, added 1ms delay as a workaround -->
     <a href="{% url 'chat_home' %}">Home</a>
     {% if user.is_authenticated %}
         <a href="{% url 'settings' %}">Settings</a>
@@ -20,13 +23,13 @@
         <a href="{% url 'account_signup' %}">Register</a>
     {% endif %}
 
-    {% if messages %}
+    <!-- {% if messages %}
         {% for message in messages %}
             <div>
                 {{ message }}
             </div>
         {% endfor %}
-    {% endif %}
+    {% endif %} -->
     
     {% block content %}
     {% endblock content %}

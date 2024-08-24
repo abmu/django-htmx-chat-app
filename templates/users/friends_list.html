@@ -1,9 +1,4 @@
 {% extends 'users/manage_friends.html' %}
 {% block manage_friends_content %}
-    <h1>Friends list</h1>
-    <div id="friends-list">
-        {% for friend in friends_mutual %}
-            {% include 'users/snippets/friend.html' %}
-        {% endfor %}
-    </div>
+    {% include 'users/partials/friends_list.html' %}
 {% endblock manage_friends_content %}

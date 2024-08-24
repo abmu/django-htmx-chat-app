@@ -1,6 +1,6 @@
 <div id="outgoing-{{ recipient.uuid }}" class="outgoing-request" data-username="{{ recipient.username }}">
-    <a href="{% url 'direct_message' recipient.uuid %}">{{ recipient.username }}</a>
-    <form method="POST" action="{% url 'outgoing_requests' %}">
+    {% include 'chat/partials/chat_link.html' with other_user=recipient %}
+    <form method="POST" action="{% url 'outgoing_requests' %}" hx-swap="none">
         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}"/>
         <input type="hidden" name="uuid" value="{{ recipient.uuid }}"/>
         <button type="submit" name="action" value="cancel">Cancel</button>
