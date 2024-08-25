@@ -1,24 +1,35 @@
-let currentAreFriends;
-let isNewMessagesText;
-let authenticationFailed = false;
+let currentAreFriends = null;
+let isNewMessagesText = null;
+let wsConnectionClosed = false;
 
-document.body.addEventListener('htmx:wsClose', (event) => {
-    authenticationFailed = true;
+function getCurrentAreFriends() {
+    return currentAreFriends;
+}
+
+document.body.addEventListener('htmx:wsOpen', (event) => {
+    console.log('open');
+    if (wsConnectionClosed) {
+        wsConnectionClosed = false;
+        htmx.ajax('GET', window.location.pathname, {test: "hello"})
+    }
 });
 
-function attemptReconnection() {
-    console.log('test')
-    if (authenticationFailed) {
-        authenticationFailed = false;
-        var socketElt = document.body; // Assuming the ws-connect is on the body
-        ensureWebSocket(socketElt);
+document.body.addEventListener('htmx:wsClose', (event) => {
+    console.log('closed');
+    wsConnectionClosed = true;
+});
+
+function ensureConnection() {
+    if (wsConnectionClosed) {
+        console.log('attempting to reconnect');
+        htmx.ajax('GET', window.location.pathname, {'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa': "haaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaello"})
     }
 }
-  
-htmx.attemptWebSocketReconnection = attemptReconnection;
 
-document.body.addEventListener('htmx:afterSwap', () => {
-    htmx.attemptWebSocketReconnection();
+document.body.addEventListener('htmx:beforeSwap', (event) => {
+    ensureConnection();
+    currentAreFriends = null;
+    isNewMessagesText = null;
 });
 
 const jsonMessageHandlers = {
@@ -45,7 +56,8 @@ document.body.addEventListener('htmx:wsBeforeMessage', (event) => {
     const wsMessage = event.detail.message;
     const jsonData = JSON.parse(wsMessage);
     handleJsonMessage(jsonData);
-    event.preventDefault(); // Cancel event to prevent any further unnecessary processing by HTMX
+    // Cancel event to prevent any further unnecessary processing by HTMX
+    event.preventDefault();
 });
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
@@ -119,7 +131,10 @@ function updateRecentChats(newRecentChatHtml) {
         setUnreadCount(newRecentChatElement, unreadCount);
     }
 
-    document.getElementById('recent-chats').insertAdjacentElement('afterbegin', newRecentChatElement);
+    const recentChats = document.getElementById('recent-chats');
+    recentChats.insertAdjacentElement('afterbegin', newRecentChatElement);
+    // Process to ensure that HTMX behaviours are applied to the new element (e.g. when a link is clicked within the element, add a HX-Request header to the request)
+    htmx.process(recentChats);
 }
 
 function updateElementReadStatus(element) {
@@ -259,6 +274,7 @@ function addUserHtmlToSection(section, html) {
     const suffix = section === 'friends' ? '-list' : '-requests';
     const container = document.getElementById(`${section}${suffix}`);
     binaryInsertInOrder(newUserElement, container);
+    htmx.process(container);
 }
 
 function handleAccountDeleted() {
