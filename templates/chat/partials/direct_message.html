@@ -6,7 +6,8 @@
         {% include 'chat/partials/not_friends_text.html' %}
     {% endif %}
 </div>
-<form id="form" ws-send hx-vals='{"type":"chat_send"}' method="POST" action="{% url 'direct_message' current_other_user.uuid %}"> <!-- Send POST request as a fallback if JavaScript is disabled and websockets can't be used -->
+<!-- Send POST request as a fallback if JavaScript is disabled and websockets can't be used -->
+<form id="form" ws-send hx-vals='{"type":"chat_send"}' method="POST" action="{% url 'direct_message' current_other_user.uuid %}">
     {% csrf_token %}
     {% with field=form.content %}
         {% if field.errors %}
@@ -26,9 +27,6 @@
 </div>
 
 <script>
-    currentAreFriends = '{{ are_friends }}' === 'True'; // Convert string to boolean
-    isNewMessagesText = false;
-
     function getDateTextHtml(date) {
         return `{% include 'chat/partials/date_text.html' with date='TEMP' %}`.replaceAll('TEMP', date);
     }
@@ -42,6 +40,9 @@
     }
 
     function handleMessagesLoad() {
+        currentAreFriends = '{{ are_friends }}' === 'True';
+        isNewMessagesText = false;
+
         let previousDate = null;
 
         const messageElements = document.querySelectorAll('.message');
@@ -60,9 +61,9 @@
 
             messageElement.dataset.read = 'True';
             if (!isNewMessagesText) {
+                isNewMessagesText = true;
                 const newMessagesTextHtml = getNewMessagesTextHtml();
                 messageElement.insertAdjacentHTML('beforebegin', newMessagesTextHtml);
-                isNewMessagesText = true;
             }
         });
     }

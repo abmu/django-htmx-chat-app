@@ -2,15 +2,10 @@ let currentAreFriends = null;
 let isNewMessagesText = null;
 let wsConnectionClosed = false;
 
-function getCurrentAreFriends() {
-    return currentAreFriends;
-}
-
 document.body.addEventListener('htmx:wsOpen', (event) => {
     console.log('open');
     if (wsConnectionClosed) {
         wsConnectionClosed = false;
-        htmx.ajax('GET', window.location.pathname, {test: "hello"})
     }
 });
 
@@ -19,15 +14,7 @@ document.body.addEventListener('htmx:wsClose', (event) => {
     wsConnectionClosed = true;
 });
 
-function ensureConnection() {
-    if (wsConnectionClosed) {
-        console.log('attempting to reconnect');
-        htmx.ajax('GET', window.location.pathname, {'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa': "haaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaello"})
-    }
-}
-
 document.body.addEventListener('htmx:beforeSwap', (event) => {
-    ensureConnection();
     currentAreFriends = null;
     isNewMessagesText = null;
 });
