@@ -1,32 +1,24 @@
 import json
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
-from django.core.exceptions import ValidationError
 from django.template.loader import get_template
 from django.contrib.auth import get_user_model
 from django.urls import resolve, Resolver404
 from users.urls import MANAGE_FRIENDS_URLS
 from .urls import CHAT_URLS
 from .models import Message
-from .utils import get_group_name, send_ws_message_both_users
+from .utils import get_session_group, get_user_group, send_both_users_ws_message
 
 User = get_user_model()
 
 
 class ChatConsumer(WebsocketConsumer):
     def connect(self):
-        self.scope['csrf_token'] = self.scope['cookies'].get('csrftoken')
+        self.session = self.scope['session']
+        self._add_to_session_group()
         self.user = self.scope['user']
-        if not self.user.is_authenticated:
-            self.accept() # Accept before closing so automatic reconnection is not attempted by the HTMX WS extension
-            self.close()
-            return
-        
-        self.user_group = get_group_name(self.user)
-        
-        async_to_sync(self.channel_layer.group_add)(
-            self.user_group, self.channel_name
-        )
+        self._add_to_user_group()
+        self.csrf_token = self.scope['cookies'].get('csrftoken')
 
         self.url_name = None
         self.current_other_user = None
@@ -34,9 +26,24 @@ class ChatConsumer(WebsocketConsumer):
 
         self.accept()
 
+    def _add_to_session_group(self):
+        self.session_group = get_session_group(self.session)
+
+        async_to_sync(self.channel_layer.group_add)(
+            self.session_group, self.channel_name
+        )
+
+    def _add_to_user_group(self):
+        self.user_group = get_user_group(self.user)
+        
+        async_to_sync(self.channel_layer.group_add)(
+            self.user_group, self.channel_name
+        )
+
     def disconnect(self, close_code):
-        if not hasattr(self, 'user_group'):
-            return
+        async_to_sync(self.channel_layer.group_discard)(
+            self.session_group, self.channel_name
+        )
 
         async_to_sync(self.channel_layer.group_discard)(
             self.user_group, self.channel_name
@@ -51,24 +58,24 @@ class ChatConsumer(WebsocketConsumer):
         message_type = json_data.get('type')
         if message_type == 'chat_send':
             content = json_data.get('content')
-            self.handle_chat_send(content)
+            self._handle_chat_send(content)
         elif message_type == 'page_load':
             path = json_data.get('path')
-            self.handle_page_load(path)
+            self._handle_page_load(path)
 
-    def handle_page_load(self, path):
-        self.handle_page_unload()
+    def _handle_page_load(self, path):
+        self._handle_page_unload()
 
         try:
             resolved = resolve(path)
             self.url_name = resolved.url_name
             if self.url_name == 'direct_message':
                 uuid = resolved.kwargs['uuid']
-                self.handle_chat_load(uuid)
+                self._handle_chat_load(uuid)
         except Resolver404:
             return
 
-    def handle_chat_load(self, uuid):
+    def _handle_chat_load(self, uuid):
         try:
             self.current_other_user = User.objects.get(uuid=uuid)
         except User.DoesNotExist:
@@ -76,7 +83,7 @@ class ChatConsumer(WebsocketConsumer):
 
         self.are_friends = self.user.has_friend_mutual(self.current_other_user)
 
-    def handle_page_unload(self):
+    def _handle_page_unload(self):
         self.url_name = None
         self.current_other_user = None
         self.are_friends = None
@@ -95,7 +102,10 @@ class ChatConsumer(WebsocketConsumer):
             'serialized_message': serialized_message
         }
 
-    def handle_chat_send(self, content):
+    def _handle_chat_send(self, content):
+        if not self.user.is_authenticated:
+            return
+
         if not self.are_friends:
             return
         
@@ -110,7 +120,7 @@ class ChatConsumer(WebsocketConsumer):
         serialized_message = message.serialize()
 
         event = self._get_chat_message_event(serialized_message)
-        send_ws_message_both_users(self.user, self.current_other_user, event=event)
+        send_both_users_ws_message(self.user, self.current_other_user, event=event)
     
     def _is_recipient(self, data):
         return data['recipient']['uuid'] == str(self.user.uuid)
@@ -195,7 +205,7 @@ class ChatConsumer(WebsocketConsumer):
 
         if newly_updated > 0:
             event = self._get_message_read_event(serialized_message)
-            send_ws_message_both_users(self.user, self.current_other_user, event=event)
+            send_both_users_ws_message(self.user, self.current_other_user, event=event)
 
     def _send_decrement_unread_count(self, other_user, count):
         self.send(text_data=json.dumps({
@@ -283,7 +293,7 @@ class ChatConsumer(WebsocketConsumer):
         return get_template('users/partials/incoming_request.html').render(
             context={
                 'sender': sender,
-                'csrf_token': self.scope['csrf_token']
+                'csrf_token': self.csrf_token
             }
         )
 
@@ -291,7 +301,7 @@ class ChatConsumer(WebsocketConsumer):
         return get_template('users/partials/outgoing_request.html').render(
             context={
                 'recipient': recipient,
-                'csrf_token': self.scope['csrf_token']
+                'csrf_token': self.csrf_token
             }
         )
 
@@ -342,7 +352,7 @@ class ChatConsumer(WebsocketConsumer):
         return get_template('users/partials/friend.html').render(
             context={
                 'friend': friend,
-                'csrf_token': self.scope['csrf_token']
+                'csrf_token': self.csrf_token
             }
         )
     
@@ -397,4 +407,14 @@ class ChatConsumer(WebsocketConsumer):
     def account_deleted(self, event):
         self._send_account_deleted()
         
+        self.close()
+
+    def _send_account_logged_out(self):
+        self.send(text_data=json.dumps({
+            'type': 'account_logged_out'
+        }))
+
+    def account_logged_out(self, event):
+        self._send_account_logged_out()
+
         self.close()

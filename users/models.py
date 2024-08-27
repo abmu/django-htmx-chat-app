@@ -5,7 +5,7 @@ from django.utils.functional import cached_property
 from uuid import uuid4
 from allauth.account.models import EmailAddress
 from chat.models import Message
-from chat.utils import send_ws_message, send_ws_message_both_users
+from chat.utils import send_user_ws_message, send_both_users_ws_message
 
 
 class User(AbstractUser):
@@ -85,7 +85,7 @@ class User(AbstractUser):
         else:
             event = self._get_friend_request_sent_event(sender=self, recipient=friend)
         
-        send_ws_message_both_users(self, friend, event=event)
+        send_both_users_ws_message(self, friend, event=event)
 
     @staticmethod
     def _get_friend_removed_event():
@@ -102,7 +102,7 @@ class User(AbstractUser):
         friend.friends.remove(self)
 
         event = self._get_friend_removed_event()
-        send_ws_message_both_users(self, friend, event=event)
+        send_both_users_ws_message(self, friend, event=event)
 
         return True, 'Friend successfully removed'
     
@@ -131,7 +131,7 @@ class User(AbstractUser):
         else:
             return False, 'Invalid action'
         
-        send_ws_message_both_users(self, request_sender, event=event)
+        send_both_users_ws_message(self, request_sender, event=event)
         
         return True, message
     
@@ -150,7 +150,7 @@ class User(AbstractUser):
         self.friends.remove(request_recipient)
 
         event = self._get_friend_request_cancelled_event(sender=self, recipient=request_recipient)
-        send_ws_message_both_users(self, request_recipient, event=event)
+        send_both_users_ws_message(self, request_recipient, event=event)
 
         return True, 'Outgoing friend request successfully cancelled'
 
@@ -168,16 +168,16 @@ class User(AbstractUser):
         friend_removed_event = self._get_friend_removed_event() | other_user
         for friend in self.friends_mutual:
             friend.friends.remove(self)
-            send_ws_message(friend, event=friend_removed_event)
+            send_user_ws_message(friend, event=friend_removed_event)
 
         for request_sender in self.get_incoming_requests():
             request_sender.friends.remove(self)
             friend_request_rejected_event = self._get_friend_request_rejected_event(sender=request_sender, recipient=self) | other_user
-            send_ws_message(request_sender, event=friend_request_rejected_event)
+            send_user_ws_message(request_sender, event=friend_request_rejected_event)
 
         for request_recipient in self.get_outgoing_requests():
             friend_request_cancelled_event = self._get_friend_request_cancelled_event(sender=self, recipient=request_recipient) | other_user
-            send_ws_message(request_recipient, event=friend_request_cancelled_event)
+            send_user_ws_message(request_recipient, event=friend_request_cancelled_event)
 
         self.friends.clear()
 
@@ -191,7 +191,7 @@ class User(AbstractUser):
         self.save()
 
         account_deleted_event = self._get_account_deleted_event()
-        send_ws_message(self, event=account_deleted_event)
+        send_user_ws_message(self, event=account_deleted_event)
 
         self._clear_friends_and_requests()
 

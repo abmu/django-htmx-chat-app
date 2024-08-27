@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from uuid import uuid4
-from .utils import send_ws_message_both_users
+from .utils import send_both_users_ws_message
 
 
 class Message(models.Model):
@@ -77,7 +77,7 @@ class Message(models.Model):
         unread_count = new_messages.update(read=True)
         if unread_count > 0:
             event = cls._get_all_messages_read_event(sender=request_other_user, recipient=request_user, unread_count=unread_count)
-            send_ws_message_both_users(request_user, request_other_user, event=event)
+            send_both_users_ws_message(request_user, request_other_user, event=event)
 
         return messages_list
     
