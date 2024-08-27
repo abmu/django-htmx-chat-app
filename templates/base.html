@@ -13,8 +13,12 @@
 
     <script src="{% static 'main.js' %}" defer></script>
 </head>
-<body hx-boost="true" hx-ext="ws" ws-connect="/ws/chat/" hx-history="false">
-    <div id="load" ws-send hx-trigger="load delay:1ms, htmx:afterSwap from:body" hx-vals='js:{"type":"page_load", "path": window.location.pathname}'></div> <!-- BUG: WS load message is sent twice, added 1ms delay as a workaround -->
+<body class="" hx-boost="true" hx-history="false" {% if user.is_authenticated %}hx-ext="ws" ws-connect="/ws/chat/"{% endif %}>
+    {% if user.is_authenticated %}
+        <div id="load" ws-send hx-trigger="load delay:1ms, htmx:afterSwap from:body" hx-vals='js:{"type":"page_load", "path": window.location.pathname}'></div> <!-- BUG: WS load message is sent twice, added 1ms delay as a workaround -->
+        <div id="ws-connection-status" hx-preserve="true"></div>
+    {% endif %}
+        
     <a href="{% url 'chat_home' %}">Home</a>
     {% if user.is_authenticated %}
         <a href="{% url 'settings' %}">Settings</a>

@@ -45,10 +45,11 @@ def friends_list(request):
 
     is_htmx_request = request.headers.get('HX-Request') == 'true'
     is_history_restore_request = request.headers.get('HX-History-Restore-Request') == 'true'
+    is_full_load_request = request.headers.get('HX-Full-Page-Request') == 'true'
     from_home = request.session.pop('from_home', False)
     from_manage_friends = request.session.pop('from_manage_friends', False)
 
-    if not is_htmx_request or is_history_restore_request or from_home:
+    if not is_htmx_request or is_history_restore_request or is_full_load_request or from_home:
         return render(request, 'users/friends_list.html', context | get_friends_context(user))
     
     if from_manage_friends:
@@ -86,7 +87,7 @@ def incoming_requests(request):
         'title': 'Incoming requests',
         'csrf_token': get_csrf_token(request)
     }
-    if request.headers.get('HX-Request') and not request.headers.get('HX-History-Restore-Request'):
+    if request.headers.get('HX-Request') and not (request.headers.get('HX-History-Restore-Request') or request.headers.get('HX-Full-Page-Request')):
         return render(request, 'users/partials/incoming_requests.html',
             context | {
                 'incoming_requests': user.get_incoming_requests()
@@ -113,7 +114,7 @@ def outgoing_requests(request):
         'title': 'Outgoing requests',
         'csrf_token': get_csrf_token(request)
     }
-    if request.headers.get('HX-Request') and not request.headers.get('HX-History-Restore-Request'):
+    if request.headers.get('HX-Request') and not (request.headers.get('HX-History-Restore-Request') or request.headers.get('HX-Full-Page-Request')):
         return render(request, 'users/partials/outgoing_requests.html',
             context | {
                 'outgoing_requests': user.get_outgoing_requests()
@@ -140,7 +141,7 @@ def add_friend(request):
         'title': 'Add friend',
         'form': form,
     }
-    if request.headers.get('HX-Request') and not request.headers.get('HX-History-Restore-Request'):
+    if request.headers.get('HX-Request') and not (request.headers.get('HX-History-Restore-Request') or request.headers.get('HX-Full-Page-Request')):
         return render(request, 'users/partials/add_friend.html', context)
     return render(request, 'users/add_friend.html', context | get_friends_context(user))
 

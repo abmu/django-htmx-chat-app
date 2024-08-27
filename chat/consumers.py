@@ -1,4 +1,4 @@
-import json
+import json, time
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 from django.template.loader import get_template
@@ -14,6 +14,11 @@ User = get_user_model()
 
 class ChatConsumer(WebsocketConsumer):
     def connect(self):
+        if self.scope['session'].session_key is None:
+            self.accept() # Accept before closing so automatic reconnection is not attempted by the HTMX WS extension
+            self.close()
+            return
+
         self.session = self.scope['session']
         self._add_to_session_group()
         self.user = self.scope['user']
@@ -41,6 +46,9 @@ class ChatConsumer(WebsocketConsumer):
         )
 
     def disconnect(self, close_code):
+        if not hasattr(self, 'session'):
+            return
+        
         async_to_sync(self.channel_layer.group_discard)(
             self.session_group, self.channel_name
         )
@@ -362,7 +370,7 @@ class ChatConsumer(WebsocketConsumer):
             'areFriends': are_friends
         }))
 
-    def _handle_friendship_change(self, event, are_friends):
+    def _handle_friendship_change_event(self, event, are_friends):
         other_user = event['other_user']
         in_friends_area = self._in_friends_area()
         section = 'friends'
@@ -385,10 +393,10 @@ class ChatConsumer(WebsocketConsumer):
 
     def friend_request_accepted(self, event):
         self._handle_friend_request_event(event, is_friend_request_removed=True)
-        self._handle_friendship_change(event, are_friends=True)
+        self._handle_friendship_change_event(event, are_friends=True)
 
     def friend_removed(self, event):
-       self._handle_friendship_change(event, are_friends=False)
+       self._handle_friendship_change_event(event, are_friends=False)
 
     def friend_request_sent(self, event):
         self._handle_friend_request_event(event, is_friend_request_removed=False)
@@ -409,12 +417,12 @@ class ChatConsumer(WebsocketConsumer):
         
         self.close()
 
-    def _send_account_logged_out(self):
+    def _send_session_logged_out(self):
         self.send(text_data=json.dumps({
-            'type': 'account_logged_out'
+            'type': 'session_logged_out'
         }))
 
-    def account_logged_out(self, event):
-        self._send_account_logged_out()
+    def session_logged_out(self, event):
+        self._send_session_logged_out()
 
         self.close()

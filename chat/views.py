@@ -44,6 +44,6 @@ def direct_message(request, uuid):
         'form': form,
         'chat_messages': chat_messages
     }
-    if request.headers.get('HX-Request') and not request.headers.get('HX-History-Restore-Request'):
+    if request.headers.get('HX-Request') and not (request.headers.get('HX-History-Restore-Request') or request.headers.get('HX-Full-Page-Request')):
         return render(request, 'chat/partials/direct_message.html', context)
     return render(request, 'chat/direct_message.html', context | get_home_context(user))

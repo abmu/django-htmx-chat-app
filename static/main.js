@@ -1,22 +1,77 @@
 let currentAreFriends = null;
 let isNewMessagesText = null;
-let wsConnectionClosed = false;
+let wsConnected = null;
+
+function updateWebSocketConnectionStatus(newConnectionStatus) {
+    wsConnected = newConnectionStatus;
+    const connectionStatusElement = document.getElementById('ws-connection-status');
+    if (connectionStatusElement !== null) {
+        connectionStatusElement.textContent = newConnectionStatus === true ? '' : 'Connection lost';
+    }
+}
 
 document.body.addEventListener('htmx:wsOpen', (event) => {
-    console.log('open');
-    if (wsConnectionClosed) {
-        wsConnectionClosed = false;
+    if (wsConnected === false) {
+        htmx.ajax('GET', window.location.pathname, {
+            headers: {
+              'HX-Full-Page-Request': 'true'
+            }
+        });
     }
+    updateWebSocketConnectionStatus(true);
 });
 
 document.body.addEventListener('htmx:wsClose', (event) => {
-    console.log('closed');
-    wsConnectionClosed = true;
+    updateWebSocketConnectionStatus(false);
 });
 
 document.body.addEventListener('htmx:beforeSwap', (event) => {
     currentAreFriends = null;
     isNewMessagesText = null;
+});
+
+function updateBodyAttributes(event) {
+    if (event.detail.target.tagName.toLowerCase() !== 'body') {
+        return false;
+    }
+
+    const parser = new DOMParser();
+    const parsedResponse = parser.parseFromString(event.detail.xhr.response, 'text/html');
+    
+    const newAttributes = parsedResponse.body.attributes;
+    const bodyAttributes = document.body.attributes;
+
+    // Ensure the body has a class attribute for accurate comparison checks
+    // HTMX automatically leaves behind a class attribute even if the user didn't include one to begin with
+    let isChanged = false;
+
+    for (let i = bodyAttributes.length - 1; i >= 0; i--) {
+        const attr = bodyAttributes.item(i);
+        if (!newAttributes.getNamedItem(attr.name)) {
+            document.body.removeAttribute(attr.name);
+            isChanged = true;
+        }
+    }
+
+    for (let i = 0; i < newAttributes.length; i++) {
+        const attr = newAttributes.item(i);
+        const existingAttr = bodyAttributes.getNamedItem(attr.name);
+        if (!existingAttr || existingAttr.value !== attr.value) {
+            document.body.setAttribute(attr.name, attr.value);
+            isChanged = true;
+        }
+    }
+
+    return isChanged;
+}
+
+document.body.addEventListener('htmx:afterSettle', (event) => {
+    if (updateBodyAttributes(event)) {
+        // Reprocess to ensure HTMX behaviours are enabled (e.g. if the HTMX WS extension is added, ensure it is enabled) 
+        // htmx.process(document.body);
+
+        window.location.reload();
+    }
 });
 
 const jsonMessageHandlers = {
@@ -30,7 +85,8 @@ const jsonMessageHandlers = {
     'remove_user_from_section': (jsonData) => removeUserFromSection(jsonData.section, jsonData.otherUserUuid),
     'add_user_html_to_section': (jsonData) => addUserHtmlToSection(jsonData.section, jsonData.html),
     'update_friendship': (jsonData) => updateFriendship(jsonData.areFriends),
-    'account_deleted': (jsonData) => handleAccountDeleted()
+    'account_deleted': (jsonData) => handleAccountDeleted(),
+    'session_logged_out': (jsonData) => handleSessionLoggedOut()
 };
 
 function handleJsonMessage(jsonData) {
@@ -265,5 +321,18 @@ function addUserHtmlToSection(section, html) {
 }
 
 function handleAccountDeleted() {
-    window.location.replace(`/`);
+    handleSessionLoggedOut();
 }
+
+function handleSessionLoggedOut() {
+    htmx.ajax('GET', window.location.pathname, {
+        headers: {
+          'HX-Full-Page-Request': 'true'
+        }
+    });
+}
+
+// Prevent a POST resubmit on refresh or back button
+// if (window.history.replaceState) {
+//     window.history.replaceState(null, null, window.location.href);
+// }
