@@ -1,4 +1,4 @@
-import json, time
+import json
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 from django.template.loader import get_template
@@ -30,6 +30,8 @@ class ChatConsumer(WebsocketConsumer):
         self.are_friends = None
 
         self.accept()
+        
+        self.connection_open = True
 
     def _add_to_session_group(self):
         self.session_group = get_session_group(self.session)
@@ -413,8 +415,10 @@ class ChatConsumer(WebsocketConsumer):
         }))
 
     def account_deleted(self, event):
-        self._send_account_deleted()
+        if not self.connection_open:
+            return
         
+        self._send_account_deleted()
         self.close()
 
     def _send_session_logged_out(self):
@@ -423,6 +427,22 @@ class ChatConsumer(WebsocketConsumer):
         }))
 
     def session_logged_out(self, event):
-        self._send_session_logged_out()
+        self.connection_open = False
 
+        self._send_session_logged_out()
         self.close()
+
+    def _send_update_account(self, other_user):
+        self.send(text_data=json.dumps({
+            'type': 'update_account',
+            'otherUser': other_user
+        })) 
+
+    def update_account(self, event):
+        other_user = event['other_user']
+        in_chat_area = self._in_chat_area()
+
+        if not in_chat_area:
+            return
+        
+        self._send_update_account(other_user)

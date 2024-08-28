@@ -150,6 +150,7 @@ def settings(request):
     return redirect('account_email')
 
 
+@login_required(redirect_field_name=None)
 def delete_account(request):
     if request.method == 'POST':
         form = DeleteAccountForm(request.POST, initial={'user': request.user})

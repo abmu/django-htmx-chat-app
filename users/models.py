@@ -165,11 +165,6 @@ class User(AbstractUser):
             'other_user': self.serialize()
         }
 
-        friend_removed_event = self._get_friend_removed_event() | other_user
-        for friend in self.friends_mutual:
-            friend.friends.remove(self)
-            send_user_ws_message(friend, event=friend_removed_event)
-
         for request_sender in self.get_incoming_requests():
             request_sender.friends.remove(self)
             friend_request_rejected_event = self._get_friend_request_rejected_event(sender=request_sender, recipient=self) | other_user
@@ -179,7 +174,19 @@ class User(AbstractUser):
             friend_request_cancelled_event = self._get_friend_request_cancelled_event(sender=self, recipient=request_recipient) | other_user
             send_user_ws_message(request_recipient, event=friend_request_cancelled_event)
 
+        friend_removed_event = self._get_friend_removed_event() | other_user
+        for friend in self.friends_mutual:
+            friend.friends.remove(self)
+            send_user_ws_message(friend, event=friend_removed_event)
+
         self.friends.clear()
+
+    @staticmethod
+    def _get_update_account_event(other_user):
+        return {
+            'type': 'update_account',
+            'other_user': other_user.serialize()
+        }
 
     def delete_account(self):
         '''Delete a user's account data, but keep the old user id in the database'''
@@ -196,6 +203,12 @@ class User(AbstractUser):
         self._clear_friends_and_requests()
 
         self.remove_redundant_users()
+
+        old_recent_chats = Message.get_recent_chats(self)
+        update_account_event = self._get_update_account_event(self)
+        for chat in old_recent_chats:
+            other_user = chat['other_user']
+            send_user_ws_message(other_user, event=update_account_event)
 
     @classmethod
     def remove_redundant_users(cls):

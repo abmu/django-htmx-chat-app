@@ -86,7 +86,8 @@ const jsonMessageHandlers = {
     'add_user_html_to_section': (jsonData) => addUserHtmlToSection(jsonData.section, jsonData.html),
     'update_friendship': (jsonData) => updateFriendship(jsonData.areFriends),
     'account_deleted': (jsonData) => handleAccountDeleted(),
-    'session_logged_out': (jsonData) => handleSessionLoggedOut()
+    'session_logged_out': (jsonData) => handleSessionLoggedOut(),
+    'update_account': (jsonData) => updateAccount(jsonData.otherUser)
 };
 
 function handleJsonMessage(jsonData) {
@@ -325,11 +326,18 @@ function handleAccountDeleted() {
 }
 
 function handleSessionLoggedOut() {
-    htmx.ajax('GET', window.location.pathname, {
-        headers: {
-          'HX-Full-Page-Request': 'true'
-        }
-    });
+    // htmx.ajax('GET', window.location.pathname, {
+    //     headers: {
+    //       'HX-Full-Page-Request': 'true'
+    //     }
+    // });
+
+    window.location.reload();
+}
+
+function updateAccount(otherUser) {
+    const otherUserRecentChat = document.getElementById(`chat-${otherUser.uuid}`);
+    otherUserRecentChat.querySelector('.chat-link').textContent = otherUser.username;
 }
 
 // Prevent a POST resubmit on refresh or back button
