@@ -1,6 +1,13 @@
 {% include 'partials/hx_request_check.html' %}
 
 <h1>Add friend</h1>
+{% if messages %}
+    {% for message in messages %}
+        <div>
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
 <form method="POST" action="{% url 'add_friend' %}" hx-target="#manage-friends-content">
     {% csrf_token %}
     {{ form.as_p }}
