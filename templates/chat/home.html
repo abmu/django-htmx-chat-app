@@ -1,16 +1,31 @@
 {% extends 'base.html' %}
 {% block content %}
-    <p>Signed in as: {{ user.username }}</p>
-    <a href="{% url 'manage_friends' %}" hx-select="#home-content" hx-target="#home-content" hx-swap="outerHTML">Friends</a> (<span id="incoming-count-home">{{ incoming_requests|length }}</span> incoming requests)
-    <div id="recent-chats">
-        {% for chat in recent_chats %}
-            {% with other_user=chat.other_user last_message=chat.last_message unread_count=chat.unread_count %}
-                {% include 'chat/partials/recent_chat.html' %}
-            {% endwith %}
-        {% endfor %}
+    <div id="home-sidebar" class="sidebar">
+        <div class="sidebar-top">
+            <div>
+                <p>Signed in as: {{ user.username }}</p>
+            </div>
+            <div>
+                <a href="{% url 'manage_friends' %}" hx-select="#home-content" hx-target="#home-content" hx-swap="outerHTML">Friends</a> (<span id="incoming-count-home">{{ incoming_requests|length }}</span> incoming)
+            </div>
+        </div>
+        <div class="sidebar-middle">
+            <div id="recent-chats">
+                {% for chat in recent_chats %}
+                    {% with other_user=chat.other_user last_message=chat.last_message unread_count=chat.unread_count %}
+                        {% include 'chat/partials/recent_chat.html' %}
+                    {% endwith %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="sidebar-bottom">
+            <div>
+                <a href="{% url 'settings' %}">Settings</a>
+            </div>
+        </div>
     </div>
     
-    <div id="home-content">
+    <div id="home-content" class="content">
         {% block home_content %}
         {% endblock home_content %}
     </div>

@@ -1,21 +1,25 @@
 {% extends 'base.html' %}
 {% block content %}
-    <ul>
-        <li>
-            <a href="{% url 'account_email' %}">Change email</a>
-        </li>
-        <li>
-            <a href="{% url 'account_change_password' %}">Change password</a>
-        </li>
-        <li>
-            <a href="{% url 'delete_account' %}">Delete account</a>
-        </li>
-        <li>
-            <a href="{% url 'account_logout' %}">Logout</a>
-        </li>    
-    </ul>
+    <div id="settings-sidebar" class="sidebar">
+        <a href="{% url 'chat_home' %}">Home</a>
+
+        <ul>
+            <li>
+                <a href="{% url 'account_email' %}">Change email</a>
+            </li>
+            <li>
+                <a href="{% url 'account_change_password' %}">Change password</a>
+            </li>
+            <li>
+                <a href="{% url 'delete_account' %}">Delete account</a>
+            </li>
+            <li>
+                <a href="{% url 'account_logout' %}">Logout</a>
+            </li>    
+        </ul>
+    </div>
     
-    <div id="settings-content">
+    <div id="settings-content" class="content">
         {% block settings_content %}
         {% endblock settings_content %}
     </div>
