@@ -223,8 +223,8 @@ document.body.addEventListener('htmx:wsAfterSend', (event) => {
     if (elementId === 'load') {
         return;
     }
-    const chatInputELement = document.getElementById('chat-input');
-    chatInputELement.value = '';
+    const chatInputElement = document.getElementById('chat-input');
+    chatInputElement.value = '';
 });
 
 function isNewUnreadMessage(messageElement, userUuid) {
