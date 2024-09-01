@@ -3,21 +3,21 @@
     <div class="horizontal-menu">
         <ul>
             <li>
-                <a href="{% url 'friends_list' %}" hx-target="#manage-friends-content">All friends</a> (<span id="friends-count">{{ friends_mutual|length }}</span>)
+                <a href="{% url 'friends_list' %}" hx-target="#manage-friends-content">All</a> (<span id="friends-count">{{ friends_mutual|length }}</span>)
             </li>
             <li>
-                <a href="{% url 'incoming_requests' %}" hx-target="#manage-friends-content">Incoming requests</a> (<span id="incoming-count">{{ incoming_requests|length }}</span>)
+                <a href="{% url 'incoming_requests' %}" hx-target="#manage-friends-content">Incoming</a> (<span id="incoming-count">{{ incoming_requests|length }}</span>)
             </li>
             <li>
-                <a href="{% url 'outgoing_requests' %}" hx-target="#manage-friends-content">Outgoing requests</a> (<span id="outgoing-count">{{ outgoing_requests|length }}</span>)
+                <a href="{% url 'outgoing_requests' %}" hx-target="#manage-friends-content">Outgoing</a> (<span id="outgoing-count">{{ outgoing_requests|length }}</span>)
             </li>
             <li>
-                <a href="{% url 'add_friend' %}" hx-target="#manage-friends-content">Add friend</a>
+                <a href="{% url 'add_friend' %}" hx-target="#manage-friends-content">Add</a>
             </li>
         </ul>
     </div>
     
-    <div id="manage-friends-content" class="main-content">
+    <div id="manage-friends-content">
         {% block manage_friends_content %}
         {% endblock manage_friends_content %}
     </div>

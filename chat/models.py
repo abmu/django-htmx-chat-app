@@ -36,8 +36,8 @@ class Message(models.Model):
         return self.timestamp.strftime("%Y-%m-%d")
     
     def serialize(self):
-        visible_characters = 10
-        limited_content = self.content[:visible_characters] + '...' if len(self.content) > visible_characters else self.content
+        visible_characters = 50
+        limited_content = (self.content[:visible_characters] + '...' if len(self.content) > visible_characters else self.content).replace('\n', ' ')
         return {
             'uuid': str(self.uuid),
             'sender': self.sender.serialize(),
@@ -67,7 +67,7 @@ class Message(models.Model):
         messages = cls.objects.filter(
             models.Q(sender=request_user, recipient=request_other_user) |
             models.Q(sender=request_other_user, recipient=request_user)
-        ).order_by('-timestamp')
+        ).order_by('timestamp')
 
         messages_list = []
         for message in messages:

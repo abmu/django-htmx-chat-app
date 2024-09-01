@@ -1,11 +1,15 @@
-<div id="message-{{ message.uuid }}" class="message" data-sender-uuid="{{ message.sender.uuid }}" data-recipient-uuid="{{ message.recipient.uuid }}" data-read="{{ message.read }}" data-utc-timestamp="{{ message.timestamp }}">
-    <ul>
-        <li>From: {{ message.sender.username }}</li>
-        <li>To: {{ message.recipient.username }}</li>
-        <li><span style="white-space: pre-wrap;">{{ message.content.full }}</span></li>
-        <li><span class="time">{{ message.timestamp }}</span></li>
+<ul id="message-{{ message.uuid }}" class="message {% if message.sender.uuid != user.uuid|stringformat:'s' %}other-{% endif %}user-message" data-sender-uuid="{{ message.sender.uuid }}" data-recipient-uuid="{{ message.recipient.uuid }}" data-read="{{ message.read }}" data-utc-timestamp="{{ message.timestamp }}">
+    <li><span style="white-space: pre-wrap;">{{ message.content.full }}</span></li>
+    <li class="message-info">
+        <span class="time">{{ message.timestamp }}</span>
         {% if message.sender.uuid == user.uuid|stringformat:'s' %}
-            <li>Read: <span class="read-status">{{ message.read }}</span></li>
+            <span class="read-status">
+                {% if message.read == 'True' %}
+                    Read
+                {% else %}
+                    Not Read
+                {% endif %}
+            </span>
         {% endif %}
-    </ul>
-</div>
+    </li>
+</ul>

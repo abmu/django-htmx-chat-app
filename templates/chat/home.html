@@ -3,7 +3,7 @@
     <div id="home-sidebar" class="sidebar">
         <div class="sidebar-top">
             <div>
-                <p>Signed in as: {{ user.username }}</p>
+                <p>Signed in as: <span id="username">{{ user.username }}</span></p>
             </div>
             <div>
                 <a href="{% url 'manage_friends' %}" hx-select="#home-content" hx-target="#home-content" hx-swap="outerHTML">Friends</a> (<span id="incoming-count-home">{{ incoming_requests|length }}</span> incoming)

@@ -183,7 +183,7 @@ function updateRecentChats(newRecentChatHtml) {
 
 function updateElementReadStatus(element) {
     const readStatusElement = element.querySelector('.read-status');
-    readStatusElement.textContent = 'True';
+    readStatusElement.textContent = 'Read';
 }
 
 function updateRecentChatReadStatus(otherUserUuid) {
@@ -232,7 +232,7 @@ function isNewUnreadMessage(messageElement, userUuid) {
 }
 
 function clearNewMessagesText() {
-    const newMessagesTextElement = document.getElementById('new-messages');
+    const newMessagesTextElement = document.getElementById('new-messages-text');
     newMessagesTextElement.remove();
 }
 

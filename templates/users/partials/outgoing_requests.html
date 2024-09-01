@@ -1,6 +1,8 @@
 {% include 'partials/hx_request_check.html' %}
 
-<h1>Outgoing requests</h1>
+<div class="heading">
+    <h1>Outgoing requests</h1>
+</div>
 <div id="outgoing-requests">
     {% for recipient in outgoing_requests %}
         {% include 'users/partials/outgoing_request.html' %}

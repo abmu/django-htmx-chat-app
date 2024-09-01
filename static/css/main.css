@@ -1,4 +1,9 @@
+:root {
+    color-scheme: light;
+}
+
 body {
+    font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     height: 100vh;
     margin: 0;
     display: flex;
@@ -13,8 +18,19 @@ h1 {
     margin: 0;
 }
 
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+textarea, button, input {
+    font-family: inherit;
+    font-size: inherit;
+}
+
 #ws-connection-status {
-    height: 5%;
+    padding: 20px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -25,6 +41,10 @@ h1 {
     display: none;
 }
 
+#username {
+    font-weight: bold;
+}
+
 .flex-container {
     max-height: 100%;
     flex: 1;
@@ -33,6 +53,8 @@ h1 {
     justify-content: flex-start;
     align-items: flex-start;
     background-color: lightgray;
+    overflow: hidden;
+    gap: 5px;
 }
 
 .sidebar {
@@ -41,7 +63,7 @@ h1 {
     display: flex;
     flex-direction: column;
     overflow-wrap: break-word;
-    background-color: white;
+    gap: 5px;
 }
 
 .sidebar-top, .sidebar-bottom {
@@ -57,6 +79,33 @@ h1 {
     padding: 20px;
     overflow-y: auto;
     background-color: beige;
+    overflow: hidden;
+}
+
+.recent-chat {
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.recent-chat-data {
+    display: flex;
+    flex-direction: row;
+}
+
+.recent-chat-content {
+    flex: 1;
+}
+
+.recent-chat-info {
+    width: 20%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.unread-count {
+    align-items: flex-end;
 }
 
 .content {
@@ -64,12 +113,12 @@ h1 {
     width: 80%;
     display: flex;
     flex-direction: column;
+    gap: 5px;
 }
 
-ul {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
+.heading {
+    padding: 20px;
+    background-color: lightcyan;
 }
 
 .horizontal-menu {
@@ -83,9 +132,129 @@ ul {
     gap: 20px;
 }
 
-.main-content {
+#manage-friends-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    gap: 5px;
+}
+
+#friends-list, #incoming-requests, #outgoing-requests, #add-friend {
     flex: 1;
     padding: 20px;
     overflow-y: auto;
+    overflow-wrap: break-word;
     background-color: lightcoral;
+}
+
+#chat-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    overflow-wrap: break-word;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    background-color: lightcoral;
+}
+
+#messages {
+    width: 1500px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: blueviolet;
+}
+
+.message {
+    max-width: 50%;
+    padding: 20px;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Formula: (messages container width + horizontal padding) / content width ratio of body + potential scrollbar width */
+@media (max-width: calc(((1500px + (20px * 2)) / 0.8) + 20px)) {
+    #messages {
+        width: 100%;
+    }
+
+    .message {
+        max-width: 80%;
+    }
+}
+
+.read-status {
+    font-weight: lighter;
+}
+
+.message-info {
+    margin-top: 5px;
+    font-size: smaller;
+    align-self: flex-end;
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+}
+
+.user-message {
+    align-self: end;
+    background-color: azure;
+}
+
+.other-user-message {
+    align-self: start;
+    background-color: gray;
+}
+
+.date-text {
+    margin: 15px 0 15px 0;
+    padding: 5px 15px 5px 15px;
+    border-radius: 10px;
+    align-self: center;
+    font-weight: bold;
+    opacity: 0.8;
+    background-color: gray;
+}
+
+#new-messages-text {
+    width: 100%;
+    margin: 15px 0 15px 0;
+    padding: 5px 0 5px 0;
+    align-self: center;
+    text-align: center;
+    font-weight: bold;
+    color: white;
+    opacity: 0.8;
+    background-color: lightcoral;
+}
+
+#friendship-status {
+    padding: 5px 15px 5px 15px;
+}
+
+#friendship-status:empty {
+    display: none;
+}
+
+#chat-form {
+    padding: 15px;
+    display: flex;
+    gap: 20px;
+    background-color: aquamarine;
+}
+
+#chat-input {
+    flex-grow: 1;
+    resize: none;
+    field-sizing: content; /* NOT WIDELY SUPPORTED BY ALL MAIN BROWSERS */
+    max-height: 6em;
+    padding: 10px;
+}
+
+#chat-button {
+    align-self: flex-end;
+    padding: 10px;
 }
