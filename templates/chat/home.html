@@ -5,18 +5,23 @@
             <div>
                 <p>Signed in as: <span id="username">{{ user.username }}</span></p>
             </div>
-            <div>
-                <a href="{% url 'manage_friends' %}" hx-select="#home-content" hx-target="#home-content" hx-swap="outerHTML">Friends</a> (<span id="incoming-count-home">{{ incoming_requests|length }}</span> incoming)
-            </div>
+            <a href="{% url 'manage_friends' %}" id="friends-link" hx-select="#home-content" hx-target="#home-content" hx-swap="outerHTML">
+                <span>
+                    Friends
+                </span>
+                <span>
+                    <span id="incoming-count-home">{{ incoming_requests|length }}</span> Incoming
+                </span>
+            </a>
         </div>
         <div class="sidebar-middle">
-            <div id="recent-chats">
+            <ul id="recent-chats">
                 {% for chat in recent_chats %}
                     {% with other_user=chat.other_user last_message=chat.last_message unread_count=chat.unread_count %}
                         {% include 'chat/partials/recent_chat.html' %}
                     {% endwith %}
                 {% endfor %}
-            </div>
+            </ul>
         </div>
         <div class="sidebar-bottom">
             <div>

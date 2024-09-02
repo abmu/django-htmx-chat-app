@@ -5,11 +5,11 @@
 </div>
 
 <div id="chat-content">
-    <div id="messages">
+    <ul id="messages">
         {% for message in chat_messages %}
             {% include 'chat/partials/message.html' %}
         {% endfor %}
-    </div>
+    </ul>
 </div>
 
 <div id="friendship-status">{% if not are_friends %}{% include 'chat/partials/not_friends_text.html' %}{% endif %}</div>

@@ -1,22 +1,26 @@
-<ul id="chat-{{ other_user.uuid }}" class="recent-chat" data-unread-count="{{ unread_count }}" data-utc-timestamp="{{ last_message.timestamp }}">
-    <li class="recent-chat-heading">{% include 'chat/partials/chat_link.html' with other_user=other_user %}<span class="unread-count">{{ unread_count }}</span></li>
-    <li class="recent-chat-data">
-        <div class="recent-chat-content">
-            {% if last_message.sender.uuid == user.uuid|stringformat:'s' %}
+<li id="chat-{{ other_user.uuid }}" class="recent-chat" data-unread-count="{{ unread_count }}" data-utc-timestamp="{{ last_message.timestamp }}">
+    <div class="chat-heading">
+        {% include 'chat/partials/chat_link.html' with other_user=other_user %}
+    </div>
+    <div class="chat-details">
+        <div class="chat-details-left">
+            <div class="last-message">
                 <span class="read-status">
-                    {% if message.read == 'True' %}
-                        Read
-                    {% else %}
-                        Not Read
+                    {% if last_message.sender.uuid == user.uuid|stringformat:'s' %}
+                        {% if message.read == 'True' %}
+                            Read
+                        {% else %}
+                            Not Read
+                        {% endif %}
                     {% endif %}
                 </span>
-            {% endif %}
-            {{ last_message.sender.username }}:
-            <span style="white-space: pre-wrap;">{{ last_message.content.limited }}</span>
+                {{ last_message.sender.username }}: {{ last_message.content.limited }}
+            </div>
         </div>
-        <div class="recent-chat-info">
-            <span class="time">{{ last_message.timestamp }}</span>
-            <span class="date"></span>
+        <div class="chat-details-right">
+            <div class="unread-count">{{ unread_count }}</div>        
+            <div class="time">{{ last_message.timestamp }}</div>
+            <div class="date"></div>
         </div>
-    </li>
-</ul>
+    </div>
+</li>

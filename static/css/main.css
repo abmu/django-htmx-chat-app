@@ -24,6 +24,10 @@ ul {
     padding: 0;
 }
 
+a {
+    text-decoration: none;
+}
+
 textarea, button, input {
     font-family: inherit;
     font-size: inherit;
@@ -67,44 +71,54 @@ textarea, button, input {
 }
 
 .sidebar-top, .sidebar-bottom {
-    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
     background-color: lightblue;
+}
+
+#friends-link {
+    display: flex;
+    flex-direction: row;
+    background-color: aqua;
 }
 
 .sidebar-middle {
     flex: 1;
-    padding: 20px;
     overflow-y: auto;
     background-color: beige;
-    overflow: hidden;
 }
 
 .recent-chat {
-    max-width: 100%;
+    max-height: 120px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    background-color: blanchedalmond;
 }
 
-.recent-chat-data {
+.chat-details {
     display: flex;
     flex-direction: row;
+    gap: 5px;
 }
 
-.recent-chat-content {
+.chat-details-left {
     flex: 1;
+    overflow: hidden;
+    background-color: blueviolet;
 }
 
-.recent-chat-info {
-    width: 20%;
+.last-message {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.chat-details-right {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-}
-
-.unread-count {
     align-items: flex-end;
 }
 
@@ -186,8 +200,8 @@ textarea, button, input {
     }
 }
 
-.read-status {
-    font-weight: lighter;
+.message-content {
+    white-space: pre-wrap;
 }
 
 .message-info {
@@ -197,6 +211,10 @@ textarea, button, input {
     display: flex;
     flex-direction: row;
     gap: 5px;
+}
+
+.read-status {
+    font-weight: lighter;
 }
 
 .user-message {
