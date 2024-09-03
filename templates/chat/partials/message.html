@@ -1,6 +1,6 @@
 <li id="message-{{ message.uuid }}" class="message {% if message.sender.uuid != user.uuid|stringformat:'s' %}other-{% endif %}user-message" data-sender-uuid="{{ message.sender.uuid }}" data-recipient-uuid="{{ message.recipient.uuid }}" data-read="{{ message.read }}" data-utc-timestamp="{{ message.timestamp }}">
-    <div class="message-content">{{ message.content.full }}</div>
-    <div class="message-info">
+    <p class="message-content">{{ message.content.full }}</p>
+    <p class="message-info">
         <span class="time">{{ message.timestamp }}</span>
         {% if message.sender.uuid == user.uuid|stringformat:'s' %}
             <span class="read-status">
@@ -11,5 +11,5 @@
                 {% endif %}
             </span>
         {% endif %}
-    </div>
+    </p>
 </li>

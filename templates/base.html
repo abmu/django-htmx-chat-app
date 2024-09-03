@@ -17,10 +17,16 @@
     {% if user.is_authenticated %}
         <div id="load" ws-send hx-trigger="load delay:1ms, htmx:afterSwap from:body" hx-vals='js:{"type":"page_load", "path": window.location.pathname}'></div> <!-- BUG: WS load message is sent twice, added 1ms delay as a workaround -->
         <div id="ws-connection-status" hx-preserve="true"></div>
-    {% else %}
-        <a href="{% url 'account_login' %}">Login</a>
-        <a href="{% url 'account_signup' %}">Register</a>
     {% endif %}
+
+    <div class="navigation-bar">
+        {% if user.is_authenticated %}
+            <a href="{% url 'chat_home' %}">Home</a>
+        {% else %}
+            <a href="{% url 'account_login' %}">Login</a>
+            <a href="{% url 'account_signup' %}">Register</a>
+        {% endif %}
+    </div>
 
     <!-- {% if messages %}
         {% for message in messages %}
@@ -30,9 +36,7 @@
         {% endfor %}
     {% endif %} -->
     
-    <div class="flex-container">
-        {% block content %}
-        {% endblock content %}
-    </div>
+    {% block content %}
+    {% endblock content %}
 </body>
 </html>

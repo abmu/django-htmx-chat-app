@@ -27,7 +27,7 @@ class AddFriendForm(forms.Form):
         try:
             self.friend = User.objects.get(username__iexact=entered_username) # __iexact => case insensitive match
         except User.DoesNotExist:
-            raise forms.ValidationError('User with this username does not exist')
+            raise forms.ValidationError(f'User with the username \'{entered_username}\' does not exist')
         
         if not self.friend.is_active:
             raise forms.ValidationError('You cannot add inactive accounts')

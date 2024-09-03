@@ -1,52 +1,50 @@
 {% extends 'base.html' %}
 {% block content %}
-    <div id="home-sidebar" class="sidebar">
-        <div class="sidebar-top">
-            <div>
-                <p>Signed in as: <span id="username">{{ user.username }}</span></p>
+    <div class="flex-container">
+        <div id="home-sidebar" class="sidebar">
+            <div class="sidebar-top">
+                <p>Signed in as: <span class="username">{{ user.username }}</p>
+                <a id="friends-link" href="{% url 'manage_friends' %}" hx-select="#home-content" hx-target="#home-content" hx-swap="outerHTML">
+                    <span>
+                        Friends
+                    </span>
+                    <span>
+                        <span id="incoming-count-home">{{ incoming_requests|length }}</span> Incoming
+                    </span>
+                </a>
             </div>
-            <a href="{% url 'manage_friends' %}" id="friends-link" hx-select="#home-content" hx-target="#home-content" hx-swap="outerHTML">
-                <span>
-                    Friends
-                </span>
-                <span>
-                    <span id="incoming-count-home">{{ incoming_requests|length }}</span> Incoming
-                </span>
-            </a>
-        </div>
-        <div class="sidebar-middle">
-            <ul id="recent-chats">
-                {% for chat in recent_chats %}
-                    {% with other_user=chat.other_user last_message=chat.last_message unread_count=chat.unread_count %}
-                        {% include 'chat/partials/recent_chat.html' %}
-                    {% endwith %}
-                {% endfor %}
-            </ul>
-        </div>
-        <div class="sidebar-bottom">
-            <div>
-                <a href="{% url 'settings' %}">Settings</a>
+            <div class="sidebar-middle">
+                <ul id="recent-chats">
+                    {% for chat in recent_chats %}
+                        {% with other_user=chat.other_user last_message=chat.last_message unread_count=chat.unread_count %}
+                            {% include 'chat/partials/recent_chat.html' %}
+                        {% endwith %}
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="sidebar-bottom">
+                <a id="settings-link" href="{% url 'settings' %}">Settings</a>
             </div>
         </div>
-    </div>
-    
-    <div id="home-content" class="content">
-        {% block home_content %}
-        {% endblock home_content %}
-    </div>
+        
+        <div id="home-content" class="content">
+            {% block home_content %}
+            {% endblock home_content %}
+        </div>
 
-    <script>
-        function handleRecentChatsLoad() {
-            const recentChatElements = document.querySelectorAll('.recent-chat');
-            recentChatElements.forEach(recentChat => {
-                insertLocalTimestamp(recentChat);
-            });
-        }
+        <script>
+            function handleRecentChatsLoad() {
+                const recentChatElements = document.querySelectorAll('.recent-chat');
+                recentChatElements.forEach(recentChat => {
+                    insertLocalTimestamp(recentChat);
+                });
+            }
 
-        if (document.readyState === "loading") {
-            document.addEventListener("DOMContentLoaded", handleRecentChatsLoad);
-        } else {
-            handleRecentChatsLoad();
-        }
-    </script>
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", handleRecentChatsLoad);
+            } else {
+                handleRecentChatsLoad();
+            }
+        </script>
+    </div>
 {% endblock content %}

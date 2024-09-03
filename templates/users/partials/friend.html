@@ -1,8 +1,10 @@
-<div id="friend-{{ friend.uuid }}" class="friend" data-username="{{ friend.username }}">
-    {% include 'chat/partials/chat_link.html' with other_user=friend %}
+<li id="friend-{{ friend.uuid }}" class="user-list-item" data-username="{{ friend.username }}">
+    <a href="{% url 'direct_message' friend.uuid %}" hx-target="#home-content">
+        <p>{{ friend.username }}</p>
+    </a>
     <form method="POST" action="{% url 'friends_list' %}" hx-target="#friends-list" hx-swap="none">
         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}"/>
         <input type="hidden" name="uuid" value="{{ friend.uuid }}"/>
         <button type="submit" name="action" value="remove">Remove</button>
     </form>
-</div>
+</li>

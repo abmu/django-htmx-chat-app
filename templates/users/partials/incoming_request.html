@@ -1,9 +1,11 @@
-<div id="incoming-{{ sender.uuid }}" class="incoming-request" data-username="{{ sender.username }}">
-    {% include 'chat/partials/chat_link.html' with other_user=sender %}
+<li id="incoming-{{ sender.uuid }}" class="user-list-item" data-username="{{ sender.username }}">
+    <a href="{% url 'direct_message' sender.uuid %}" hx-target="#home-content">
+        <p>{{ sender.username }}</p>
+    </a>
     <form method="POST" action="{% url 'incoming_requests' %}" hx-target="#incoming-requests" hx-swap="none">
         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}"/>
         <input type="hidden" name="uuid" value="{{ sender.uuid }}"/>
         <button type="submit" name="action" value="accept">Accept</button>
         <button type="submit" name="action" value="reject">Reject</button>
     </form>
-</div>
+</li>

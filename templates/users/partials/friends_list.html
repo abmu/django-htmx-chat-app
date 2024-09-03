@@ -3,8 +3,10 @@
 <div class="heading">
     <h1>Friends list</h1>
 </div>
-<div id="friends-list">
-    {% for friend in friends_mutual %}
-        {% include 'users/partials/friend.html' %}
-    {% endfor %}
+<div class="manage-friends-content-container">
+    <ul id="friends-list">
+        {% for friend in friends_mutual %}
+            {% include 'users/partials/friend.html' %}
+        {% endfor %}
+    </ul>
 </div>

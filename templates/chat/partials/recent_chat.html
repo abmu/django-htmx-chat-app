@@ -1,26 +1,28 @@
 <li id="chat-{{ other_user.uuid }}" class="recent-chat" data-unread-count="{{ unread_count }}" data-utc-timestamp="{{ last_message.timestamp }}">
-    <div class="chat-heading">
-        {% include 'chat/partials/chat_link.html' with other_user=other_user %}
-    </div>
-    <div class="chat-details">
-        <div class="chat-details-left">
-            <div class="last-message">
-                <span class="read-status">
-                    {% if last_message.sender.uuid == user.uuid|stringformat:'s' %}
-                        {% if message.read == 'True' %}
-                            Read
-                        {% else %}
-                            Not Read
+    <a href="{% url 'direct_message' other_user.uuid %}" hx-target="#home-content">
+        <div class="chat-heading">
+            <p class="other-user-username">{{ other_user.username }}</p>
+        </div>
+        <div class="chat-details">
+            <div class="chat-details-left">
+                <p class="last-message">
+                    <span class="read-status">
+                        {% if last_message.sender.uuid == user.uuid|stringformat:'s' %}
+                            {% if message.read == 'True' %}
+                                Read
+                            {% else %}
+                                Not Read
+                            {% endif %}
                         {% endif %}
-                    {% endif %}
-                </span>
-                {{ last_message.sender.username }}: {{ last_message.content.limited }}
+                    </span>
+                    <span class="username">{{ last_message.sender.username }}</span>: {{ last_message.content.limited }}
+                </p>
+            </div>
+            <div class="chat-details-right">
+                <p class="unread-count">{{ unread_count }}</p>
+                <p class="time">{{ last_message.timestamp }}</p>
+                <p class="date"></p>
             </div>
         </div>
-        <div class="chat-details-right">
-            <div class="unread-count">{{ unread_count }}</div>        
-            <div class="time">{{ last_message.timestamp }}</div>
-            <div class="date"></div>
-        </div>
-    </div>
+    </a>
 </li>

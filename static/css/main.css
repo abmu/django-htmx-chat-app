@@ -10,28 +10,37 @@ body {
     flex-direction: column;
 }
 
-p {
+.flex-container p {
     margin: 0;
 }
 
-h1 {
+.flex-container h1 {
     margin: 0;
 }
 
-ul {
+.flex-container ul {
     list-style-type: none;
     margin: 0;
     padding: 0;
 }
 
-a {
+.flex-container a {
+    color: inherit;
     text-decoration: none;
+}
+
+.flex-container a:hover, .flex-container button:hover {
+    background-image: linear-gradient(rgb(0 0 0/5%) 0 0);
 }
 
 textarea, button, input {
     font-family: inherit;
     font-size: inherit;
 }
+
+button {
+    cursor: pointer;
+} 
 
 #ws-connection-status {
     padding: 20px;
@@ -45,8 +54,8 @@ textarea, button, input {
     display: none;
 }
 
-#username {
-    font-weight: bold;
+.username {
+    font-weight: 500;
 }
 
 .flex-container {
@@ -56,9 +65,13 @@ textarea, button, input {
     flex-direction: row;
     justify-content: flex-start;
     align-items: flex-start;
-    background-color: lightgray;
     overflow: hidden;
     gap: 5px;
+    background-color: lightgray;
+}
+
+body:has(.flex-container) .navigation-bar {
+    display: none;
 }
 
 .sidebar {
@@ -71,30 +84,56 @@ textarea, button, input {
 }
 
 .sidebar-top, .sidebar-bottom {
+    padding: 10px;
     display: flex;
     flex-direction: column;
+    gap: 10px;
     background-color: lightblue;
+}
+
+.sidebar-top > *, .sidebar-bottom > * {
+    padding: 10px 15px;
 }
 
 #friends-link {
     display: flex;
     flex-direction: row;
+    justify-content: space-between;
+    border-radius: 15px;
+    background-color: aqua;
+}
+
+#settings-link {
+    border-radius: 15px;
     background-color: aqua;
 }
 
 .sidebar-middle {
     flex: 1;
     overflow-y: auto;
-    background-color: beige;
 }
 
-.recent-chat {
+#recent-chats {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.recent-chat > a {
     max-height: 120px;
     padding: 20px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    gap: 5px;
     background-color: blanchedalmond;
+}
+
+.chat-heading > p {
+    font-weight: bold;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 .chat-details {
@@ -106,11 +145,11 @@ textarea, button, input {
 .chat-details-left {
     flex: 1;
     overflow: hidden;
-    background-color: blueviolet;
 }
 
 .last-message {
     display: -webkit-box;
+    line-clamp: 3;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
@@ -127,6 +166,7 @@ textarea, button, input {
     width: 80%;
     display: flex;
     flex-direction: column;
+    background-color: darkgray;
     gap: 5px;
 }
 
@@ -136,14 +176,19 @@ textarea, button, input {
 }
 
 .horizontal-menu {
-    padding: 20px;
-    background-color: lightgreen;
-}
-
-.horizontal-menu > ul {
     display: flex;
     flex-direction: row;
     gap: 20px;
+    background-color: lightgreen;
+}
+
+.horizontal-menu > li {
+    padding: 20px;
+}
+
+.horizontal-menu a {
+    padding: 10px 15px;
+    border-radius: 15px;
 }
 
 #manage-friends-content {
@@ -154,15 +199,75 @@ textarea, button, input {
     gap: 5px;
 }
 
-#friends-list, #incoming-requests, #outgoing-requests, #add-friend {
+#add-friend {
     flex: 1;
     padding: 20px;
-    overflow-y: auto;
-    overflow-wrap: break-word;
     background-color: lightcoral;
 }
 
-#chat-content {
+.manage-friends-content-container {
+    flex: 1;
+    background-color: lightcoral;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+#friends-list, #incoming-requests, #outgoing-requests {
+    width: 1500px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+}
+
+.user-list-item {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 40px;
+    background-color: beige;
+}
+  
+.user-list-item > a {
+    position: absolute;
+    left: 0;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background-color: bisque;
+}
+
+.user-list-item p {
+    max-width: calc(100% - 180px); /* Ensure the text does not go behind the form buttons at the end */
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    margin-left: 20px;
+}
+
+.user-list-item > form {
+    pointer-events: none;
+    position: absolute;
+    right: 20px;
+    z-index: 1;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.user-list-item button {
+    pointer-events: auto;
+    padding: 5px 15px;
+    border-style: none;
+    border-radius: 3px;
+}
+
+#chat-content-container {
     flex: 1;
     padding: 20px;
     overflow-y: auto;
@@ -170,7 +275,6 @@ textarea, button, input {
     display: flex;
     flex-direction: column-reverse;
     align-items: center;
-    background-color: lightcoral;
 }
 
 #messages {
@@ -178,7 +282,6 @@ textarea, button, input {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    background-color: blueviolet;
 }
 
 .message {
@@ -197,6 +300,10 @@ textarea, button, input {
 
     .message {
         max-width: 80%;
+    }
+
+    #friends-list, #incoming-requests, #outgoing-requests {
+        width: 100%;
     }
 }
 
@@ -228,8 +335,8 @@ textarea, button, input {
 }
 
 .date-text {
-    margin: 15px 0 15px 0;
-    padding: 5px 15px 5px 15px;
+    margin: 15px 0;
+    padding: 5px 15px;
     border-radius: 10px;
     align-self: center;
     font-weight: bold;
@@ -239,8 +346,9 @@ textarea, button, input {
 
 #new-messages-text {
     width: 100%;
-    margin: 15px 0 15px 0;
-    padding: 5px 0 5px 0;
+    margin: 15px 0;
+    padding: 5px 0;
+    border-radius: 10px;
     align-self: center;
     text-align: center;
     font-weight: bold;
@@ -250,7 +358,8 @@ textarea, button, input {
 }
 
 #friendship-status {
-    padding: 5px 15px 5px 15px;
+    padding: 5px 15px;
+    background-color: beige;
 }
 
 #friendship-status:empty {
@@ -268,11 +377,16 @@ textarea, button, input {
     flex-grow: 1;
     resize: none;
     field-sizing: content; /* NOT WIDELY SUPPORTED BY ALL MAIN BROWSERS */
-    max-height: 6em;
+    max-height: 4em;
     padding: 10px;
+    border-style: none;
+    border-radius: 10px;
+    outline-style: none;
 }
 
 #chat-button {
     align-self: flex-end;
     padding: 10px;
+    border-style: none;
+    border-radius: 10px;
 }

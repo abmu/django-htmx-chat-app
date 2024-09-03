@@ -1,15 +1,15 @@
 {% extends 'chat/home.html' %}
 {% block home_content %}
-    <div class="horizontal-menu">
-        <ul>
+    <div>
+        <ul class="horizontal-menu">
             <li>
-                <a href="{% url 'friends_list' %}" hx-target="#manage-friends-content">All</a> (<span id="friends-count">{{ friends_mutual|length }}</span>)
+                <a href="{% url 'friends_list' %}" hx-target="#manage-friends-content">All (<span id="friends-count">{{ friends_mutual|length }}</span>)</a>
             </li>
             <li>
-                <a href="{% url 'incoming_requests' %}" hx-target="#manage-friends-content">Incoming</a> (<span id="incoming-count">{{ incoming_requests|length }}</span>)
+                <a href="{% url 'incoming_requests' %}" hx-target="#manage-friends-content">Incoming (<span id="incoming-count">{{ incoming_requests|length }}</span>)</a>
             </li>
             <li>
-                <a href="{% url 'outgoing_requests' %}" hx-target="#manage-friends-content">Outgoing</a> (<span id="outgoing-count">{{ outgoing_requests|length }}</span>)
+                <a href="{% url 'outgoing_requests' %}" hx-target="#manage-friends-content">Outgoing (<span id="outgoing-count">{{ outgoing_requests|length }}</span>)</a>
             </li>
             <li>
                 <a href="{% url 'add_friend' %}" hx-target="#manage-friends-content">Add</a>

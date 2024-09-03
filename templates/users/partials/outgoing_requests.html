@@ -3,8 +3,10 @@
 <div class="heading">
     <h1>Outgoing requests</h1>
 </div>
-<div id="outgoing-requests">
-    {% for recipient in outgoing_requests %}
-        {% include 'users/partials/outgoing_request.html' %}
-    {% endfor %}
+<div class="manage-friends-content-container">
+    <ul id="outgoing-requests">
+        {% for recipient in outgoing_requests %}
+            {% include 'users/partials/outgoing_request.html' %}
+        {% endfor %}
+    </ul>
 </div>

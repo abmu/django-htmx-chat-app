@@ -4,7 +4,7 @@
     <h1>{{ current_other_user }}</h1>
 </div>
 
-<div id="chat-content">
+<div id="chat-content-container">
     <ul id="messages">
         {% for message in chat_messages %}
             {% include 'chat/partials/message.html' %}
@@ -72,16 +72,25 @@
         });
     }
 
+    function handleKeyDown(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            chatFormElement.dispatchEvent(new Event('submit'));
+        }
+    }
+
     function addInputEventListeners() {
         const chatInputElement = document.getElementById('chat-input');
         const chatFormElement = document.getElementById('chat-form');
         
-        chatInputElement.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                chatFormElement.dispatchEvent(new Event('submit'));
+        document.addEventListener('keydown', (event) => {
+            if (document.activeElement !== chatInputElement) {
+                chatInputElement.focus();
+                handleKeyDown(event);
             }
-        });
+        })
+
+        chatInputElement.addEventListener('keydown', handleKeyDown);
     }
 
     function handleChatLoaded() {
@@ -89,8 +98,8 @@
         addInputEventListeners();
     }
 
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", handleChatLoaded);
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', handleChatLoaded);
     } else {
         handleChatLoaded();
     }
