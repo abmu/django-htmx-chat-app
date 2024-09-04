@@ -1,7 +1,9 @@
 <li id="chat-{{ other_user.uuid }}" class="recent-chat" data-unread-count="{{ unread_count }}" data-utc-timestamp="{{ last_message.timestamp }}">
-    <a href="{% url 'direct_message' other_user.uuid %}" hx-target="#home-content">
+    {% url 'direct_message' other_user.uuid as direct_message_url %}
+    <a href="{{ direct_message_url }}" {% if request.path == direct_message_url %}class="active"{% endif %} hx-target="#home-content">
         <div class="chat-heading">
-            <p class="other-user-username">{{ other_user.username }}</p>
+            <p class="chat-heading-username">{{ other_user.username }}</p>
+            <p class="unread-count">{% if unread_count > 0 %}{{ unread_count }}{% endif %}</p>
         </div>
         <div class="chat-details">
             <div class="chat-details-left">
@@ -19,7 +21,6 @@
                 </p>
             </div>
             <div class="chat-details-right">
-                <p class="unread-count">{{ unread_count }}</p>
                 <p class="time">{{ last_message.timestamp }}</p>
                 <p class="date"></p>
             </div>

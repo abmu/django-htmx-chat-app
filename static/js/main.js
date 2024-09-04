@@ -25,9 +25,32 @@ document.body.addEventListener('htmx:wsClose', (event) => {
     updateWebSocketConnectionStatus(false);
 });
 
+function focusChatInput(event) {
+    const chatInputElement = document.getElementById('chat-input');
+    if (document.activeElement !== chatInputElement) {
+        chatInputElement.focus();
+        handleChatKeyDown(event);
+    }
+}
+
+function removeActiveLinkClasses(event) {
+    const requestPath = event.detail.pathInfo.requestPath;
+    const inFriendsArea = requestPath.startsWith('/friends/');
+
+    const oldActiveLinks = document.querySelectorAll('a.active');
+    oldActiveLinks.forEach((oldActiveLink) =>{
+        if (inFriendsArea && oldActiveLink.getAttribute('href') === '/friends/') {
+            return;
+        }
+        oldActiveLink.classList.remove('active');
+    });
+}
+
 document.body.addEventListener('htmx:beforeSwap', (event) => {
     currentAreFriends = null;
     isNewMessagesText = null;
+    document.removeEventListener('keydown', focusChatInput);
+    removeActiveLinkClasses(event);
 });
 
 function updateBodyAttributes(event) {
@@ -65,12 +88,23 @@ function updateBodyAttributes(event) {
     return isChanged;
 }
 
+function addActiveLinkClasses(event) {
+    const requestPath = event.detail.pathInfo.requestPath;
+
+    const newActiveLink = document.querySelector(`a[href='${requestPath}']`);
+    if (newActiveLink !== null) {
+        newActiveLink.classList.add('active');
+    }
+}
+
 document.body.addEventListener('htmx:afterSettle', (event) => {
     if (updateBodyAttributes(event)) {
         // Reprocess to ensure HTMX behaviours are enabled (e.g. if the HTMX WS extension is added, ensure it is enabled) 
         // htmx.process(document.body);
 
         window.location.reload();
+    } else {
+        addActiveLinkClasses(event);
     }
 });
 
@@ -157,7 +191,7 @@ function htmlToElement(html, trim = true) {
 
 function setUnreadCount(recentChatElement, newUnreadCount) {
     recentChatElement.dataset.unreadCount = newUnreadCount
-    recentChatElement.querySelector('.unread-count').textContent = newUnreadCount;
+    recentChatElement.querySelector('.unread-count').textContent = newUnreadCount > 0 ? newUnreadCount : '';
 }
 
 function updateRecentChats(newRecentChatHtml) {

@@ -72,7 +72,9 @@
         });
     }
 
-    function handleKeyDown(event) {
+    function handleChatKeyDown(event) {
+        const chatFormElement = document.getElementById('chat-form');
+
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();
             chatFormElement.dispatchEvent(new Event('submit'));
@@ -80,17 +82,10 @@
     }
 
     function addInputEventListeners() {
+        document.addEventListener('keydown', focusChatInput);
+    
         const chatInputElement = document.getElementById('chat-input');
-        const chatFormElement = document.getElementById('chat-form');
-        
-        document.addEventListener('keydown', (event) => {
-            if (document.activeElement !== chatInputElement) {
-                chatInputElement.focus();
-                handleKeyDown(event);
-            }
-        })
-
-        chatInputElement.addEventListener('keydown', handleKeyDown);
+        chatInputElement.addEventListener('keydown', handleChatKeyDown);
     }
 
     function handleChatLoaded() {
@@ -99,7 +94,7 @@
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', handleChatLoaded);
+        document.addEventListener('DOMContentLoaded', handleChatLoaded, { once : true });
     } else {
         handleChatLoaded();
     }

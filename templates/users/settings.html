@@ -6,16 +6,20 @@
 
             <ul>
                 <li>
-                    <a href="{% url 'account_email' %}">Change email</a>
+                    {% url 'account_email' as account_email_url %}
+                    <a href="{{ account_email_url }}" {% if request.path == account_email_url %}class="active"{% endif %}>Change email</a>
                 </li>
                 <li>
-                    <a href="{% url 'account_change_password' %}">Change password</a>
+                    {% url 'account_change_password' as account_change_password_url %}
+                    <a href="{{ account_change_password_url }}" {% if request.path == account_change_password_url %}class="active"{% endif %}>Change password</a>
                 </li>
                 <li>
-                    <a href="{% url 'delete_account' %}">Delete account</a>
+                    {% url 'delete_account' as delete_account_url %}
+                    <a href="{{ delete_account_url }}" {% if request.path == delete_account_url %}class="active"{% endif %}>Delete account</a>
                 </li>
                 <li>
-                    <a href="{% url 'account_logout' %}">Logout</a>
+                    {% url 'account_logout' as account_logout_url %}
+                    <a href="{{ account_logout_url }}" {% if request.path == account_logout_url %}class="active"{% endif %}>Logout</a>
                 </li>    
             </ul>
         </div>

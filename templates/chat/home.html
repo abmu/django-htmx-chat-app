@@ -1,10 +1,12 @@
 {% extends 'base.html' %}
+{% load startswith %}
 {% block content %}
     <div class="flex-container">
         <div id="home-sidebar" class="sidebar">
             <div class="sidebar-top">
                 <p>Signed in as: <span class="username">{{ user.username }}</p>
-                <a id="friends-link" href="{% url 'manage_friends' %}" hx-select="#home-content" hx-target="#home-content" hx-swap="outerHTML">
+                {% url 'manage_friends' as manage_friends_url %}
+                <a id="friends-link" href="{{ manage_friends_url }}" {% if request.path|startswith:manage_friends_url %}class="active"{% endif %} hx-select="#home-content" hx-target="#home-content" hx-swap="outerHTML">
                     <span>
                         Friends
                     </span>
@@ -41,7 +43,7 @@
             }
 
             if (document.readyState === "loading") {
-                document.addEventListener("DOMContentLoaded", handleRecentChatsLoad);
+                document.addEventListener("DOMContentLoaded", handleRecentChatsLoad, { once : true });
             } else {
                 handleRecentChatsLoad();
             }
