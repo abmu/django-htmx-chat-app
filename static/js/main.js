@@ -27,7 +27,7 @@ document.body.addEventListener('htmx:wsClose', (event) => {
 
 function focusChatInput(event) {
     const chatInputElement = document.getElementById('chat-input');
-    if (document.activeElement !== chatInputElement) {
+    if (!(document.activeElement === chatInputElement || event.shiftKey || event.ctrlKey || event.keyCode === 9)) { // event.keyCode === 9 - TAB key
         chatInputElement.focus();
         handleChatKeyDown(event);
     }
@@ -89,11 +89,20 @@ function updateBodyAttributes(event) {
 }
 
 function addActiveLinkClasses(event) {
-    const requestPath = event.detail.pathInfo.requestPath;
+    // const requestPath = event.detail.pathInfo.requestPath;
+    const requestPath = window.location.pathname;
+    const inFriendsArea = requestPath.startsWith('/friends/');
 
     const newActiveLink = document.querySelector(`a[href='${requestPath}']`);
     if (newActiveLink !== null) {
         newActiveLink.classList.add('active');
+    }
+
+    if (inFriendsArea) {
+        const friendsLink = document.getElementById('friends-link');
+        if (friendsLink !== null && !friendsLink.classList.contains('active')) {
+            friendsLink.classList.add('active');
+        }
     }
 }
 

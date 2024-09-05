@@ -1,25 +1,23 @@
 {% extends 'chat/home.html' %}
 {% block home_content %}
-    <div>
-        <ul class="horizontal-menu">
-            <li>
-                {% url 'friends_list' as friends_list_url %}
-                <a href="{{ friends_list_url }}" {% if request.path == friends_list_url %}class="active"{% endif %} hx-target="#manage-friends-content">All (<span id="friends-count">{{ friends_mutual|length }}</span>)</a>
-            </li>
-            <li>
-                {% url 'incoming_requests' as incoming_requests_url %}
-                <a href="{{ incoming_requests_url }}" {% if request.path == incoming_requests_url %}class="active"{% endif %} hx-target="#manage-friends-content">Incoming (<span id="incoming-count">{{ incoming_requests|length }}</span>)</a>
-            </li>
-            <li>
-                {% url 'outgoing_requests' as outgoing_requests_url %}
-                <a href="{{ outgoing_requests_url }}" {% if request.path == outgoing_requests_url %}class="active"{% endif %} hx-target="#manage-friends-content">Outgoing (<span id="outgoing-count">{{ outgoing_requests|length }}</span>)</a>
-            </li>
-            <li>
-                {% url 'add_friend' as add_friend_url %}
-                <a href="{{ add_friend_url }}" {% if request.path == add_friend_url %}class="active"{% endif %} hx-target="#manage-friends-content">Add</a>
-            </li>
-        </ul>
-    </div>
+    <ul class="horizontal-menu">
+        <li>
+            {% url 'friends_list' as friends_list_url %}
+            <a href="{{ friends_list_url }}" {% if request.path == friends_list_url %}class="active"{% endif %} hx-target="#manage-friends-content">All (<span id="friends-count">{{ friends_mutual|length }}</span>)</a>
+        </li>
+        <li>
+            {% url 'incoming_requests' as incoming_requests_url %}
+            <a href="{{ incoming_requests_url }}" {% if request.path == incoming_requests_url %}class="active"{% endif %} hx-target="#manage-friends-content">Incoming (<span id="incoming-count">{{ incoming_requests|length }}</span>)</a>
+        </li>
+        <li>
+            {% url 'outgoing_requests' as outgoing_requests_url %}
+            <a href="{{ outgoing_requests_url }}" {% if request.path == outgoing_requests_url %}class="active"{% endif %} hx-target="#manage-friends-content">Outgoing (<span id="outgoing-count">{{ outgoing_requests|length }}</span>)</a>
+        </li>
+        <li>
+            {% url 'add_friend' as add_friend_url %}
+            <a href="{{ add_friend_url }}" {% if request.path == add_friend_url %}class="active"{% endif %} hx-target="#manage-friends-content">Add</a>
+        </li>
+    </ul>
     
     <div id="manage-friends-content">
         {% block manage_friends_content %}

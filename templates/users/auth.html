@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="navigation-bar">
+        <ul class="horizontal-menu">
+            <li>
+                <a href="{% url 'chat_home' %}">Message app</a>
+            </li>
+            {% if user.is_authenticated == False %}
+                <li>
+                    {% url 'account_login' as account_login_url %}
+                    <a href="{{ account_login_url }}" {% if request.path == account_login_url %}class="active"{% endif %}>Login</a>
+                </li>
+                <li>
+                    {% url 'account_signup' as account_signup_url %}
+                    <a href="{{ account_signup_url }}" {% if request.path == account_signup_url %}class="active"{% endif %}>Register</a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+    <div class="flex-auth-container">
+        <div id="auth-content">
+            {% block auth_content %}
+            {% endblock auth_content %}
+        </div>
+    </div>
+{% endblock content %}

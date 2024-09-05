@@ -1,10 +1,12 @@
 {% extends 'base.html' %}
 {% block content %}
-    <div class="flex-container">
+    <div class="flex-settings-container">
         <div id="settings-sidebar" class="sidebar">
-            <a href="{% url 'chat_home' %}">Home</a>
+            <div class="sidebar-top">
+                <a id="home-link" href="{% url 'chat_home' %}">Home</a>
+            </div>
 
-            <ul>
+            <ul class="vertical-menu">
                 <li>
                     {% url 'account_email' as account_email_url %}
                     <a href="{{ account_email_url }}" {% if request.path == account_email_url %}class="active"{% endif %}>Change email</a>
