@@ -7,11 +7,13 @@
                 <p>Signed in as: <span class="username">{{ user.username }}</p>
                 {% url 'manage_friends' as manage_friends_url %}
                 <a id="friends-link" href="{{ manage_friends_url }}" {% if request.path|startswith:manage_friends_url %}class="active"{% endif %} hx-select="#home-content" hx-target="#home-content" hx-swap="outerHTML">
-                    <span>
+                    <span id="friends-text">
                         Friends
                     </span>
-                    <span>
-                        <span id="incoming-count-home">{{ incoming_requests|length }}</span> Incoming
+                    <span id="incoming-count-home-text">
+                        {% with incoming_requests_count=incoming_requests|length %}
+                            <span id="incoming-count-home">{% if incoming_requests_count > 0 %}{{ incoming_requests_count }}{% endif %}</span> Incoming
+                        {% endwith %}
                     </span>
                 </a>
             </div>

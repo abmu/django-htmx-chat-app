@@ -125,6 +125,50 @@ button {
     gap: 15px;
 }
 
+.content-container form {
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+  
+.content-container form label {
+    display: block;
+    font-weight: bold;
+}
+
+.content-container form input[type="text"],
+.content-container form input[type="email"],
+.content-container form input[type="password"] {
+    width: 100%;
+    margin: 5px 0px;
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.content-container form p:empty {
+    display: none;
+}
+  
+.content-container form button {
+    align-self: flex-start;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+}
+
+.content-container a {
+    color: revert;
+    text-decoration: revert;
+}
+  
+.content-container ul {
+    list-style-type: revert;
+    padding-left: 20px;
+}
+
 .sidebar {
     height: 100%;
     width: 20%;
@@ -151,6 +195,24 @@ button {
     flex-direction: row;
     justify-content: space-between;
     border-radius: 15px;
+}
+
+#friends-text {
+    padding: 5px 0;
+}
+
+#incoming-count-home-text {
+    padding: 5px 10px;
+    border-radius: 15px;
+    background-color: lightsalmon;
+}
+
+#incoming-count-home:empty {
+    display: none;
+}
+
+body:has(#incoming-count-home:empty) #incoming-count-home-text {
+    display: none;
 }
 
 #settings-link, #home-link {
@@ -480,48 +542,4 @@ button {
     display: flex;
     flex-direction: column;
     gap: 5px;
-}
-
-.content-container form {
-    max-width: 500px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-  
-.content-container form label {
-    display: block;
-    font-weight: bold;
-}
-
-.content-container form input[type="text"],
-.content-container form input[type="email"],
-.content-container form input[type="password"] {
-    width: 100%;
-    margin: 5px 0px;
-    padding: 8px;
-    border: none;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-
-.content-container form p:empty {
-    display: none;
-}
-  
-.content-container form button {
-    align-self: flex-start;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-}
-
-.content-container a {
-    color: revert;
-    text-decoration: revert;
-}
-  
-.content-container ul {
-    list-style-type: revert;
-    padding-left: 20px;
 }

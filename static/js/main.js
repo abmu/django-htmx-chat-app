@@ -33,24 +33,10 @@ function focusChatInput(event) {
     }
 }
 
-function removeActiveLinkClasses(event) {
-    const requestPath = event.detail.pathInfo.requestPath;
-    const inFriendsArea = requestPath.startsWith('/friends/');
-
-    const oldActiveLinks = document.querySelectorAll('a.active');
-    oldActiveLinks.forEach((oldActiveLink) =>{
-        if (inFriendsArea && oldActiveLink.getAttribute('href') === '/friends/') {
-            return;
-        }
-        oldActiveLink.classList.remove('active');
-    });
-}
-
 document.body.addEventListener('htmx:beforeSwap', (event) => {
     currentAreFriends = null;
     isNewMessagesText = null;
     document.removeEventListener('keydown', focusChatInput);
-    removeActiveLinkClasses(event);
 });
 
 function updateBodyAttributes(event) {
@@ -88,8 +74,12 @@ function updateBodyAttributes(event) {
     return isChanged;
 }
 
-function addActiveLinkClasses(event) {
-    // const requestPath = event.detail.pathInfo.requestPath;
+function updateActiveLinkClasses() {
+    const oldActiveLinks = document.querySelectorAll('a.active');
+    oldActiveLinks.forEach((oldActiveLink) =>{
+        oldActiveLink.classList.remove('active');
+    });
+
     const requestPath = window.location.pathname;
     const inFriendsArea = requestPath.startsWith('/friends/');
 
@@ -100,7 +90,7 @@ function addActiveLinkClasses(event) {
 
     if (inFriendsArea) {
         const friendsLink = document.getElementById('friends-link');
-        if (friendsLink !== null && !friendsLink.classList.contains('active')) {
+        if (friendsLink !== null) {
             friendsLink.classList.add('active');
         }
     }
@@ -113,7 +103,7 @@ document.body.addEventListener('htmx:afterSettle', (event) => {
 
         window.location.reload();
     } else {
-        addActiveLinkClasses(event);
+        updateActiveLinkClasses();
     }
 });
 
@@ -244,8 +234,12 @@ function decrementUnreadCount(otherUserUuid, count) {
 function updateSectionCount(page, section, action) {
     const suffix = page === 'home' ? '-home' : '';
     const sectionElement = document.getElementById(`${section}-count${suffix}`);
-    const oldCount = parseInt(sectionElement.textContent);
-    const newCount = action === 'increment' ? oldCount + 1 : Math.max(0, oldCount - 1);
+    let oldCount = sectionElement.textContent === '' ? 0 : parseInt(sectionElement.textContent);
+    let newCount = action === 'increment' ? oldCount + 1 : Math.max(0, oldCount - 1);
+    if (page === 'home' && newCount === 0) {
+        // Set newCount to blank so that the incoming count displayed on the home page can be hidden using CSS
+        newCount = '';
+    }
     sectionElement.textContent = newCount;
 }
 
