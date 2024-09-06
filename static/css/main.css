@@ -176,6 +176,7 @@ button {
     flex-direction: column;
     overflow-wrap: break-word;
     gap: 5px;
+    background-color: slategray;
 }
 
 .sidebar-top, .sidebar-bottom {
@@ -542,4 +543,79 @@ body:has(#incoming-count-home:empty) #incoming-count-home-text {
     display: flex;
     flex-direction: column;
     gap: 5px;
+}
+
+@media screen and (max-width: 1000px) {
+    #sidebar-toggle {
+        display: none;
+    }
+
+    .hamburger-icon {
+        padding: 15px;
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 2;
+        cursor: pointer;
+        background-color: aquamarine;
+    }
+
+    .hamburger-icon span {
+        display: block;
+        width: 25px;
+        height: 3px;
+        margin: 5px 0;
+        background: darkslategray;
+        transition: 0.3s;
+    }
+
+    #sidebar-toggle:checked ~ * .sidebar {
+        left: 0;
+    }
+
+    .sidebar {
+        max-height: calc(100% - 64px); /* To account for the hamburger icon */
+        margin-top: 64px;
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: -100%;
+        transition: left 0.3s ease-in-out;
+        z-index: 1;
+    }
+
+    .content {
+        max-height: calc(100% - 64px);
+        margin-top: 64px;
+        width: 100%;
+    }
+
+    .horizontal-menu {
+        padding-left: 15px;
+    }
+
+    .horizontal-menu > li {
+        padding: 20px 5px;
+    }
+    
+    /* Change hamburger icon to an X icon when toggled */
+
+    #sidebar-toggle:checked ~ .hamburger-icon span:nth-child(1) {
+        transform: rotate(45deg) translate(5px, 5px);
+    }
+
+    #sidebar-toggle:checked ~ .hamburger-icon span:nth-child(2) {
+        opacity: 0;
+    }
+
+    #sidebar-toggle:checked ~ .hamburger-icon span:nth-child(3) {
+        transform: rotate(-45deg) translate(6px, -6px);
+    }
+}
+
+@media screen and (min-width: 1001px) {
+    #sidebar-toggle, .hamburger-icon {
+        display: none;
+    }
 }

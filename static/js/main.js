@@ -96,6 +96,14 @@ function updateActiveLinkClasses() {
     }
 }
 
+function handleSidebarToggle() {
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    
+    if (sidebarToggle && sidebarToggle.checked) {
+        sidebarToggle.checked = false;
+    }
+}
+
 document.body.addEventListener('htmx:afterSettle', (event) => {
     if (updateBodyAttributes(event)) {
         // Reprocess to ensure HTMX behaviours are enabled (e.g. if the HTMX WS extension is added, ensure it is enabled) 
@@ -103,6 +111,7 @@ document.body.addEventListener('htmx:afterSettle', (event) => {
 
         window.location.reload();
     } else {
+        handleSidebarToggle();
         updateActiveLinkClasses();
     }
 });
