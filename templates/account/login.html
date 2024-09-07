@@ -9,6 +9,8 @@
     </div>
     <div class="content-container">
         {% if not SOCIALACCOUNT_ONLY %}
+            {% include 'partials/django_messages.html' %}
+            
             {% setvar link %}
                 <a href="{{ signup_url }}">
                 {% endsetvar %}

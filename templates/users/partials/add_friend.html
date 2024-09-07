@@ -4,13 +4,8 @@
     <h1>Add friend</h1>
 </div>
 <div class="content-container">
-    {% if messages %}
-        {% for message in messages %}
-            <div>
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
+    {% include 'partials/django_messages.html' %}
+
     <form method="POST" action="{% url 'add_friend' %}" hx-target="#manage-friends-content">
         {% csrf_token %}
         {{ form.as_p }}

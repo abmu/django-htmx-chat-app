@@ -8,13 +8,8 @@
         {% endelement %}
     </div>
     <div class="content-container">
-        {% if messages %}
-            {% for message in messages %}
-                <div>
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
+        {% include 'partials/django_messages.html' %}
+
         {% if not emailaddresses %}
             {% include 'account/snippets/warn_no_email.html' %}
         {% endif %}
