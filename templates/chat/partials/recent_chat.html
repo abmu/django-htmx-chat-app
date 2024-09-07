@@ -8,15 +8,15 @@
         <div class="chat-details">
             <div class="chat-details-left">
                 <p class="last-message">
-                    <span class="read-status">
-                        {% if last_message.sender.uuid == user.uuid|stringformat:'s' %}
-                            {% if message.read == 'True' %}
+                    {% if last_message.sender.uuid == user.uuid|stringformat:'s' %}
+                        <span class="read-status">
+                            {% if last_message.read == 'True' %}
                                 Read
                             {% else %}
                                 Not Read
                             {% endif %}
-                        {% endif %}
-                    </span>
+                        </span>
+                    {% endif %}
                     <span class="username">{{ last_message.sender.username }}</span>: {{ last_message.content.limited }}
                 </p>
             </div>
