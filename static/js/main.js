@@ -383,7 +383,7 @@ function handleSessionLoggedOut() {
 
 function updateAccount(otherUser) {
     const otherUserRecentChat = document.getElementById(`chat-${otherUser.uuid}`);
-    otherUserRecentChat.querySelector('.other-user-username').textContent = otherUser.username;
+    otherUserRecentChat.querySelector('.chat-heading-username').textContent = otherUser.username;
 }
 
 // Prevent a POST resubmit on refresh or back button

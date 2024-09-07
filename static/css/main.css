@@ -582,7 +582,7 @@ body:has(#incoming-count-home:empty) #incoming-count-home-text {
         top: 0;
         left: -100%;
         transition: left 0.3s ease-in-out;
-        z-index: 1;
+        z-index: 2;
     }
 
     .content {
