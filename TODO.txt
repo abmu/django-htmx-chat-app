@@ -1,0 +1,15 @@
+BUGS
+- HTMX related. When the browser back button is pressed and there is a redirect by the Django serer when the request is sent, the browser URL does not get updated to the redirect URL (but everything else is)
+
+FEATURES
+- Setup an email service provider with Django Anymail and use a Celery email backend
+- Message pagination using HTMX
+- Group chats
+- Additional chat features (message reactions, message reply, delete messages and chats, send files, character limits, block users etc.)
+- Profile pictures (which are updated in real time)
+- Send real time updates in the settings
+- Search functionality in friends page
+
+OTHER
+- Add Python type hints, and docstrings
+- Switch from JavaScript to TypeScript
