@@ -1,5 +1,6 @@
 BUGS
 - HTMX related. When the browser back button is pressed and there is a redirect by the Django serer when the request is sent, the browser URL does not get updated to the redirect URL (but everything else is)
+- Email verification success message is incorrectly displayed on add friends page if the user is logged in when they verify their email and navigate to that page
 
 FEATURES
 - Setup an email service provider with Django Anymail and use a Celery email backend
