@@ -44,7 +44,7 @@ docker-compose build
 docker-compose up
 ```
 
-4. In your web browser, go to `http://localhost:8000` to view and interact with the application.
+4. In your web browser, go to http://localhost:8000 to view and interact with the application.
 
 ## Additional Notes
 
