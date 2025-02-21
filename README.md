@@ -1,4 +1,4 @@
-# message-app
+# django-htmx-chat-app
 
 A web app built using Django and HTMX. This app utilises WebSockets to enable you to chat with other users individually in real-time with read receipts and also has a friend management system.
 
