@@ -2,7 +2,7 @@
 
 A web app built using Django and HTMX. This app utilises WebSockets to enable you to chat with other users individually in real-time with read receipts and also has a friend management system.
 
-[chat-app.webm](https://github.com/user-attachments/assets/7287f27b-9b6f-4e14-87b7-aba2406dcf34)
+[chat-app.webm](https://github.com/user-attachments/assets/6be0ff6c-423f-4e1b-be3f-a135d328cb3c)
 
 **The setup below is designed for testing purposes only.**
 
